@@ -61,7 +61,7 @@ export default function UploadAccounts({
     };
     fetchServiceName();
     fechAccountDetails();
-  }, [params.serviceId , accountId]);
+  }, [params.serviceId , accountId , form]);
 
   const [loading, setLoading] = React.useState<boolean>(false);
   const form = useForm<TAccountsService>({
