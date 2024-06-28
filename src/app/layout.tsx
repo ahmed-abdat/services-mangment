@@ -1,7 +1,7 @@
 import { tajawal, roboto } from "@/app/font/font";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { Metadata, Viewport } from "next";
+import { Metadata } from "next";
 
 
 
@@ -9,15 +9,12 @@ import { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
   title: {
-    default: "الاتحاد الوطني لطلبة موريتانيا",
-    template: "%s | الاتحاد الوطني",
+    default: 'Farmasi RIM ',
+    template: "%s | Farmasi RIM",
   },
-  description: "الاتحاد الوطني لطلبة موريتانيا - الأخبار والمنشورات",
+  description: "Farmasi RIM",
 };
 
-export const viewport: Viewport = {
-  themeColor: "#58cc02",
-};
 
 export default function RootLayout({
   children,
