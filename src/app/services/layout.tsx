@@ -11,7 +11,7 @@ export default function DashboardLayout({
   }>) {
 
     return (
-<main className=' '>
+<main className='mb-6'>
     {/* <Login /> */}
     <section className="mx-auto px-4 max-w-[1024px]" dir='ltr'>
         <Header />

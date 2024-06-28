@@ -10,17 +10,18 @@ export default function ServiceProfile({ service  } : { service: Service }) {
   
   
   const url = new URL(`${mainUrl}/services`);
-  url.searchParams.set('serviceName', service?.name  ?? "0");
+  url.searchParams.set('serviceName', service?.id  ?? "0");
   url.searchParams.set("openModal", "true");
   
   const updateUrl = new URL(
     `${mainUrl}/services/upload-servers`
   );
-  updateUrl.searchParams.set('serviceName', service?.name  ?? "0");
+  updateUrl.searchParams.set('serviceName', service?.id  ?? "0");
+
   
   return (
     <div key={service?.name} className="border rounded-lg shadow-md overflow-hidden">
-            <Link href={`/services/${service?.name}`}>
+            <Link href={`/services/${service?.id}`}>
                 <Image
                   src={service?.thumbnail?.url ?? "/no-image.png"}
                   alt={service?.name ?? "no-image"}

@@ -43,24 +43,24 @@ export const addService = async (service: Service) => {
         thumbnail: { url: "", name: thumbnail?.name },
         createdAt: serverTimestamp(),
       };
-      const docRef = await setDoc(doc(firestore, "services", name), posteData);
+      const docRef = await addDoc(collection(firestore, "services"), posteData);
       console.log("poste added");
   
       // add thumbnail file image to storage
       const storage = getStorage();
       const thumbnailRef = ref(
         storage,
-        `services-thumbnails/${name}/` + service?.thumbnail?.name
+        `services-thumbnails/${docRef.id}/` + service?.thumbnail?.name
       );
       if (service?.thumbnail?.file) {
         uploadBytes(thumbnailRef, service.thumbnail.file).then(async () => {
           const downloadURL = await getDownloadURL(thumbnailRef);
-          await updateDoc(doc(firestore, "services", name), {
+          await updateDoc(doc(firestore, "services", docRef.id), {
             thumbnail: { url: downloadURL, name: service?.thumbnail?.name },
           });
         });
       }
-        return { success: true, id: name };
+        return { success: true, id: docRef.id };
     } catch (error) {
       console.log(error);
       return { success: false, id: null };
@@ -88,6 +88,7 @@ export const addService = async (service: Service) => {
 
 
   export const getService = async (name : string) => {
+    if(!name) return { success: false, service: null };
     const docRef = doc(firestore, "services", name);
     try {
       const querySnapshot = await getDoc(docRef);
@@ -103,6 +104,12 @@ export const addService = async (service: Service) => {
     try {
       await deleteDoc(doc(firestore, "services", id));
       await deleteThumbnail(id, thumbnail);
+      // delete the accounts sub collection
+      const accountsRef = collection(firestore, `services/${id}/accounts`);
+      const accounts = await getDocs(accountsRef);
+      accounts.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
       return { success: true };
     } catch (error) {
       console.log(error);
@@ -133,6 +140,7 @@ export const addService = async (service: Service) => {
   }) => {
     try {
       if(service.name) {
+        // update document id with new name
         await updateDoc(doc(firestore, "services", id), {
           name: service.name,
           updatedAt: serverTimestamp(),
@@ -182,8 +190,7 @@ export const addService = async (service: Service) => {
       }
       // await addDoc(collection(firestore, `services/${serviceName}/accounts`), accountDetails);
       const collectionRef = collection(firestore, `services/${serviceName}/accounts`);
-      const docRef = doc(collectionRef , account.name);
-      await setDoc(docRef, accountDetails);
+      await addDoc(collectionRef, accountDetails);
       return { success: true };
     } catch (error) {
       console.log(error);
@@ -192,12 +199,10 @@ export const addService = async (service: Service) => {
   }
 
 
-  export const getServiceAccount = async (serviceName: string , accountName : string) => {
-    const docRef = doc(firestore, `services/${serviceName}/accounts`, accountName);
+  export const getServiceAccount = async (serviceId: string , accountId : string) => {
+    const docRef = doc(firestore, `services/${serviceId}/accounts`, accountId);
     try {
       const querySnapshot = await getDoc(docRef);
-      console.log(querySnapshot.data());
-      
       const account = { ...querySnapshot.data() } as ServiceAccount;
       if(!account.name) return { success: false, account: null };
       return { success: true, account };
@@ -207,20 +212,43 @@ export const addService = async (service: Service) => {
     }
   }
 
-  export const getServiceAccounts = async (serviceName: string) => {
+  export const getServiceAccounts = async (serviceId: string) => {
     const accounts: ServiceAccount[] = [];
     const q = query(
-      collection(firestore, `services/${serviceName}/accounts`),
+      collection(firestore, `services/${serviceId}/accounts`),
       orderBy("createdAt", "desc")
     );
     try {
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((doc) => {
-        accounts.push({ name: doc.id, ...doc.data() } as ServiceAccount);
+        accounts.push({ id: doc.id, ...doc.data() } as ServiceAccount);
       });
       return { success: true, accounts };
     } catch (error) {
       console.log(error);
       return { success: false, accounts };
+    }
+  }
+
+  export const updateServiceAccount = async (serviceId: string, accountId: string, account: ServiceAccount) => {
+    try {
+      await updateDoc(doc(firestore, `services/${serviceId}/accounts`, accountId), {
+        ...account,
+        updatedAt: serverTimestamp(),
+      });
+      return { success: true };
+    } catch (error) {
+      console.log(error);
+      return { success: false };
+    }
+  }
+
+  export const deleteServiceAccount = async (serviceId: string, accountId: string) => {
+    try {
+      await deleteDoc(doc(firestore, `services/${serviceId}/accounts`, accountId));
+      return { success: true };
+    } catch (error) {
+      console.log(error);
+      return { success: false };
     }
   }

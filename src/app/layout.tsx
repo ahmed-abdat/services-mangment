@@ -1,13 +1,23 @@
-import { Tajawal, Roboto } from "next/font/google";
+import { tajawal, roboto } from "@/app/font/font";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { Metadata, Viewport } from "next";
 
 
-export const roboto = Roboto({
-  weight: ["400", "500", "700"],
-  subsets: ["latin"],
-  variable: "--font-roboto",
-});
+
+
+
+export const metadata: Metadata = {
+  title: {
+    default: "الاتحاد الوطني لطلبة موريتانيا",
+    template: "%s | الاتحاد الوطني",
+  },
+  description: "الاتحاد الوطني لطلبة موريتانيا - الأخبار والمنشورات",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#58cc02",
+};
 
 export default function RootLayout({
   children,
@@ -16,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${roboto.className}`}>
+      <body className={`${roboto.className} ${tajawal.className}`}>
         {children}
         <Toaster position="top-center" richColors dir="ltr" />
       </body>

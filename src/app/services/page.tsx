@@ -25,7 +25,7 @@ export default async function Services({
 
  
   return (
-    <section>
+    <>
       <DeleteModal searchParams={searchParams} />
       <ServiceHeader />
       {
@@ -37,6 +37,6 @@ export default async function Services({
         ))}
       </div>
       }
-    </section>
+    </>
   );
 }

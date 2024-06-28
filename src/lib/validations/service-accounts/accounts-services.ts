@@ -6,8 +6,8 @@ export const AccountsService = z.object({
   }),
   details: z
     .string()
-    .max(80, {
-      message: "details must be at most 80 characters long",
+    .max(50, {
+      message: "details must be at most 50 characters long",
     })
     .optional(),
 });

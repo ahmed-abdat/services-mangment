@@ -4,16 +4,19 @@ import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation';
+import { getService } from '@/app/action';
 
-export default function ServiceHeader({ serviceName } : {serviceName?: string }) {
-    const uploadservesurl = serviceName ? `/services/${serviceName}/upload-accounts` : "/services/upload-servers";
+export default function ServiceHeader({ serviceId } : {serviceId?: string }) {
+    const uploadservesurl = serviceId ? `/services/${serviceId}/upload-accounts` : "/services/upload-servers";
 
     const router = useRouter();
+
+    const [serviceName, setServiceName] = React.useState<string>("");
 
      // check if user is logged in
   useEffect(() => {
     const localeUser = localStorage?.getItem("user") ?? "";
-    if(serviceName) return ;
+    if(serviceId) return ;
     if (localeUser) {
       router.push("/services");
       router.refresh();
@@ -21,7 +24,22 @@ export default function ServiceHeader({ serviceName } : {serviceName?: string })
     } else {
       router.push(`/`);
     }
-  }, [router]);
+  }, [router , serviceId]);
+
+  useEffect(() => {
+    if (!serviceId) {
+      return;
+    }
+    const fetchServiceName = async () => {
+      const { service , success} = await getService(serviceId);
+      if(!success || !service) {
+        return;
+      }
+      setServiceName(service.name);
+    }
+    fetchServiceName();
+  } , [serviceId])
+  
 
   return (
     <div className="items-start justify-between py-4 border-b sm:flex mt-12">
