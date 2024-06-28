@@ -35,6 +35,10 @@ export default function UploadAccounts({
 
   const [serviceName, setServiceName] = React.useState<string>("");
   const accountId = searchParams?.accountId as string;
+  const form = useForm<TAccountsService>({
+    resolver: zodResolver(AccountsService),
+    mode: "onChange",
+  });
 
   // get the service name and account details
   useEffect(() => {
@@ -64,10 +68,7 @@ export default function UploadAccounts({
   }, [params.serviceId , accountId , form]);
 
   const [loading, setLoading] = React.useState<boolean>(false);
-  const form = useForm<TAccountsService>({
-    resolver: zodResolver(AccountsService),
-    mode: "onChange",
-  });
+
 
   const onSubmit = async (data: TAccountsService) => {
 
