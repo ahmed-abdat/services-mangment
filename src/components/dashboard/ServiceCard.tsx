@@ -3,18 +3,15 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Settings, Trash } from "lucide-react";
-import { ServiceAccount } from '@/types/services/service-accounts';
+import {mainRoute} from '@/lib/mainroute'
 
 export default function ServiceProfile({ service  } : { service: Service }) {
-  const mainUrl = 'http://localhost:3000';
-  
-  
-  const url = new URL(`${mainUrl}/services`);
+  const url = new URL(`${mainRoute}/services`);
   url.searchParams.set('serviceName', service?.id  ?? "0");
   url.searchParams.set("openModal", "true");
   
   const updateUrl = new URL(
-    `${mainUrl}/services/upload-servers`
+    `${mainRoute}/services/upload-servers`
   );
   updateUrl.searchParams.set('serviceName', service?.id  ?? "0");
 

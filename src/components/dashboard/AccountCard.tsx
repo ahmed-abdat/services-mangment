@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Settings, Trash } from "lucide-react";
 import { ServiceAccount } from "@/types/services/service-accounts";
+import {mainRoute} from '@/lib/mainroute'
 
 export default function ServiceProfile({
   account,
@@ -12,15 +13,13 @@ export default function ServiceProfile({
   account: ServiceAccount;
   serviceId: string;
 }) {
-  const mainUrl = "http://localhost:3000";
-
-  const url = new URL(`${mainUrl}/services/${serviceId}`);
+  const url = new URL(`${mainRoute}/services/${serviceId}`);
   url.searchParams.set("serviceName", serviceId ?? "0");
   url.searchParams.set("openModal", "true");
   url.searchParams.set("accountId", account?.id ?? "0");
 
 
-  const updateUrl = new URL(`${mainUrl}/services/${serviceId}/upload-accounts`);
+  const updateUrl = new URL(`${mainRoute}/services/${serviceId}/upload-accounts`);
   updateUrl.searchParams.set("accountId", account?.id ?? "0");
 
   return (
