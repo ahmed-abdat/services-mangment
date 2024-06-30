@@ -25,6 +25,7 @@ import {
   addAccountUser,
   addServiceAccount,
   getAccountUser,
+  getAccountUsers,
   getService,
   getServiceAccount,
   updateAccountUser,
@@ -78,6 +79,7 @@ export default function UploadAccounts({
 
     setLoading(true);
     try {
+
       // check if we are updating or creating new account
       if(userId){
         const {success} = await updateAccountUser(serviceId, accountId, userId, userData);
@@ -89,6 +91,14 @@ export default function UploadAccounts({
         }
         return ;
       }
+       // check if the telephone is unique
+       const {  users } = await getAccountUsers(serviceId, accountId);
+       const user = users ? users?.find(user => user.telephone === data.telephone) : null;
+       if(user?.telephone === data.telephone) {
+         toast.error("telephone must be unique");
+         form.setFocus("telephone");
+         return ;
+       }
       if(!accountId || !serviceId) return ;
       const {success} = await addAccountUser(serviceId , accountId , userData);
 
@@ -191,10 +201,6 @@ export default function UploadAccounts({
              <div className="flex flex-col gap-y-4 w-full">
             <UserStartingDate date={startingDate} setDate={setStartingDate} />
             <UserEndingDate date={endingDate} setDate={setEndingDate} />
-            {/* <UserSubscriptionStatus
-              value={value}
-              onValueChange={setOnValueChange}
-            /> */}
           </div>
           <FormField
             control={form.control}
@@ -230,7 +236,7 @@ export default function UploadAccounts({
               className="w-full mx-auto md:max-w-full text-lg"
               disabled={loading}
             >
-              {accountId ? "update account" : "create new account"}
+              {userId ? "update account" : "create new account"}
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             </Button>
           </div>

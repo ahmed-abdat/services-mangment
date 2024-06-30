@@ -128,7 +128,7 @@ export default function UploadServiceForm({ name }: { name: string | string[] | 
     <ServiceThumbnail thumbnail={thumbnail} setThumbnail={setThumbnail} />
 
     <Button type="submit" className="w-full my-4 mx-auto md:max-w-full text-lg flex items-center gap-x-2" disabled={loading}>
-      creat new service
+      {name ? "update service" : "create new service"}
       {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
     </Button>
   </form>
