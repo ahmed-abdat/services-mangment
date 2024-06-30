@@ -21,7 +21,7 @@ import {
   AccountsService,
 } from "@/lib/validations/service-accounts/accounts-services";
 import { toast } from "sonner";
-import { addServiceAccount, getService, getServiceAccount, updateServiceAccount } from "@/app/action";
+import { addServiceAccount, checkifAccountNameExiste, getService, getServiceAccount, updateServiceAccount } from "@/app/action";
 import { useRouter } from "next/navigation";
 
 export default function UploadAccounts({
@@ -74,10 +74,10 @@ export default function UploadAccounts({
 
     try {
       setLoading(true);
-      const { success: isNameExiste } = await getServiceAccount(
+      const { success: isNameExiste } = await checkifAccountNameExiste(
         params.serviceId,
         data.name.trim()
-      );
+      )
       if (isNameExiste) {
         toast.error("account name already existe");
         form.setFocus("name");

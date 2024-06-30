@@ -4,14 +4,14 @@ import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation';
-import { getService } from '@/app/action';
+import { getService, getServiceAccount } from '@/app/action';
 
-export default function ServiceHeader({ serviceId } : {serviceId?: string }) {
-    const uploadservesurl = serviceId ? `/services/${serviceId}/upload-accounts` : "/services/upload-servers";
+export default function ServiceHeader({ serviceId , accountId } : {serviceId?: string , accountId?: string}) {
+    const uploadservesurl =  `/services/${serviceId}/${accountId}/upload-user` ;
 
     const router = useRouter();
 
-    const [serviceName, setServiceName] = React.useState<string>("");
+    const [accountName, setAccountName] = React.useState<string>("");
 
      // check if user is logged in
   useEffect(() => {
@@ -30,23 +30,25 @@ export default function ServiceHeader({ serviceId } : {serviceId?: string }) {
     if (!serviceId) {
       return;
     }
-    const fetchServiceName = async () => {
-      const { service , success} = await getService(serviceId);
-      if(!success || !service) {
-        return;
-      }
-      setServiceName(service.name);
-    }
-    fetchServiceName();
-  } , [serviceId])
-  
+    const fetchAccountName = async () => {
+        if(!accountId) return;
+        
+        const { account , success} = await getServiceAccount(serviceId , accountId);
+        if(!success || !account) {
+            return;
+        }
+        setAccountName(account.name);
+        }
+    fetchAccountName();
+  } , [serviceId , accountId])
+
 
   return (
     <div className="items-start justify-between py-4 border-b sm:flex mt-12">
         <div className="max-w-lg">
-          <h1 className="text-zinc-800 text-2xl font-semibold">{serviceName ? `${serviceName} Accounts` : 'Services'}</h1>
+          <h1 className="text-zinc-800 text-2xl font-semibold">{accountName} Users</h1>
           <h1 className="text-zinc-600 mt-2 text-sm">
-            Create and manage your {serviceName ? 'accounts' : 'Services'} easily and quickly.
+            Create and manage your users easily and quickly.
           </h1>
         </div>
         <Link href={`${uploadservesurl}`}>
@@ -59,7 +61,7 @@ export default function ServiceHeader({ serviceId } : {serviceId?: string }) {
             data-state="closed"
           >
             <Plus className="w-5 h-5" />
-            New {serviceName ? 'Account' : 'Service'}
+            New User
           </button>
         </Link>
       </div>

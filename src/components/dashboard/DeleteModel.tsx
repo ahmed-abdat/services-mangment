@@ -156,7 +156,7 @@ export function DeleteModal({
             </div>
           )}
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="flex gap-y-2">
           <Button variant="outline" onClick={handelClose}>
             cancel
           </Button>

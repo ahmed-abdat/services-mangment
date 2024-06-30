@@ -27,7 +27,7 @@ export default function ServiceProfile({
       key={account?.id}
       className="border rounded-lg shadow-md overflow-hidden"
     >
-      <Link href={`/services/${serviceId}/${account.name}`}>
+      <Link href={`/services/${serviceId}/${account.id}`}>
         <Image
           src={account?.thumbnail?.url ?? "/no-image.png"}
           alt={account?.name ?? "no-image"}
