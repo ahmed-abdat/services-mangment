@@ -57,7 +57,7 @@ export default function ServiceName({ params, searchParams }: PosteProps) {
     <section>
       {/* <DeleteModal searchParams={searchParams} /> */}
       <UsersHeader serviceId={serviceId} accountId={accountId}/>
-      {accounts.length === 0 || !accounts ? (
+      {users.length === 0 || !accounts ? (
         <NoServicesFound serviceId={serviceId} />
       ) : (
        <UsersTabel  users={users} params={params}/>
