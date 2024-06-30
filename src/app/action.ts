@@ -111,6 +111,12 @@ export const deleteService = async (id: string, thumbnail: Thumbnail) => {
     accounts.forEach(async (doc) => {
       await deleteDoc(doc.ref);
     });
+    // delet the users sub collection
+    const usersRef = collection(firestore, `services/${id}/users`);
+    const users = await getDocs(usersRef);
+    users.forEach(async (doc) => {
+      await deleteDoc(doc.ref);
+    });
     return { success: true };
   } catch (error) {
     console.log(error);
@@ -287,9 +293,13 @@ export const deleteServiceAccount = async (
   accountId: string
 ) => {
   try {
-    await deleteDoc(
-      doc(firestore, `services/${serviceId}/accounts`, accountId)
-    );
+    // delete all the accounts and users inside the each account
+    const usersRef = collection(firestore, `services/${serviceId}/accounts/${accountId}/users`);
+    const users = await getDocs(usersRef);
+    users.forEach(async (doc) => {
+      await deleteDoc(doc.ref);
+    });
+    await deleteDoc(doc(firestore, `services/${serviceId}/accounts`, accountId));
     return { success: true };
   } catch (error) {
     console.log(error);
