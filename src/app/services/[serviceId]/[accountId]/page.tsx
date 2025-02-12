@@ -1,17 +1,8 @@
-"use client";
-
-import { getAccountUsers, getService, getServiceAccounts } from "@/app/action";
-import { DeleteModal } from "@/components/dashboard/DeleteModel";
+import { getAccountUsers } from "@/app/action";
 import NoServicesFound from "@/components/dashboard/NoServicesFound";
-import ServiceHeader from "@/components/dashboard/ServiceHeader";
-import React, { useEffect } from "react";
-import { usePathname } from "next/navigation";
-import AccountCard from "@/components/dashboard/AccountCard";
-import { ServiceAccount } from "@/types/services/service-accounts";
 import UsersHeader from "@/components/dashboard/users/UsersHeader";
 import UsersTabel from "@/components/dashboard/users/UserTabel";
-import { TUserData, TUserTabel } from "@/types/services/user";
-
+import { formatUserForClient } from "@/lib/utils/format";
 
 interface PosteProps {
   params: {
@@ -23,44 +14,28 @@ interface PosteProps {
   };
 }
 
-export default function ServiceName({ params, searchParams }: PosteProps) {
-  const [accounts, setAccounts] = React.useState<ServiceAccount[] | []>([]);
-  const [users, setUsers] = React.useState<TUserTabel[] | []>([]);
-
+export default async function ServiceName({
+  params,
+  searchParams,
+}: PosteProps) {
   const { serviceId, accountId } = params;
 
+  const { success, users } = await getAccountUsers(serviceId, accountId);
+  if (!success) {
+    return <div>Error loading users</div>;
+  }
 
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      const { accounts, success } = await getServiceAccounts(serviceId);
-      if (!success || !accounts) {
-        return;
-      }
-      setAccounts(accounts);
-    };
-    const getAllUsers = async () => {
-      if(!serviceId || !accountId) return;
-      const {success , users} = await getAccountUsers(serviceId , accountId);
-      if(!success || !users) {
-        return;
-      }
-      console.log(users);
-      
-      setUsers(users);
-      
-    }
-    getAllUsers();
-    fetchAccounts();
-  }, [serviceId]);
+  // Format users data for client components and ensure no null values
+  const formattedUsers = (users ?? []).map((user) => formatUserForClient(user));
 
   return (
     <section>
       {/* <DeleteModal searchParams={searchParams} /> */}
-      <UsersHeader serviceId={serviceId} accountId={accountId}/>
-      {users.length === 0 || !accounts ? (
+      <UsersHeader serviceId={serviceId} accountId={accountId} />
+      {formattedUsers.length === 0 ? (
         <NoServicesFound serviceId={serviceId} />
       ) : (
-       <UsersTabel  users={users} params={params}/>
+        <UsersTabel users={formattedUsers} params={params} />
       )}
     </section>
   );

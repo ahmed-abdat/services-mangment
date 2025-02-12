@@ -294,12 +294,17 @@ export const deleteServiceAccount = async (
 ) => {
   try {
     // delete all the accounts and users inside the each account
-    const usersRef = collection(firestore, `services/${serviceId}/accounts/${accountId}/users`);
+    const usersRef = collection(
+      firestore,
+      `services/${serviceId}/accounts/${accountId}/users`
+    );
     const users = await getDocs(usersRef);
     users.forEach(async (doc) => {
       await deleteDoc(doc.ref);
     });
-    await deleteDoc(doc(firestore, `services/${serviceId}/accounts`, accountId));
+    await deleteDoc(
+      doc(firestore, `services/${serviceId}/accounts`, accountId)
+    );
     return { success: true };
   } catch (error) {
     console.log(error);
@@ -327,20 +332,34 @@ export const addAccountUser = async (
   }
 };
 
-export const getAccountUser = async  (serviceId: string, accountId: string, userId: string) => {
-  if (!serviceId || !accountId || !userId) return { success: false, user: null };
-  const docRef = doc(firestore, `services/${serviceId}/accounts/${accountId}/users`, userId);
+export const getAccountUser = async (
+  serviceId: string,
+  accountId: string,
+  userId: string
+) => {
+  if (!serviceId || !accountId || !userId)
+    return { success: false, user: null };
+  const docRef = doc(
+    firestore,
+    `services/${serviceId}/accounts/${accountId}/users`,
+    userId
+  );
   try {
     const querySnapshot = await getDoc(docRef);
     const user = { ...querySnapshot.data() } as TUserTabel;
-    if (!user.telephone ) return { success: false, user: null };
+    if (
+      !user.email ||
+      !user.description ||
+      !user.startingDate ||
+      !user.endingDate
+    )
+      return { success: false, user: null };
     return { success: true, user };
   } catch (error) {
     console.log(error);
     return { success: false, user: null };
   }
-
-}
+};
 
 export const getAccountUsers = async (serviceId: string, accountId: string) => {
   const q = query(
@@ -352,7 +371,10 @@ export const getAccountUsers = async (serviceId: string, accountId: string) => {
     const users: TUserTabel[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      const reminderDays = calculateReminderDays(data.startingDate, data.endingDate);
+      const reminderDays = calculateReminderDays(
+        data.startingDate,
+        data.endingDate
+      );
       users.push({ id: doc.id, ...data, reminderDays } as TUserTabel);
     });
     return { success: true, users };
@@ -362,11 +384,22 @@ export const getAccountUsers = async (serviceId: string, accountId: string) => {
   }
 };
 
-const calculateReminderDays = (startingDate: Timestamp | null, endingDate: Timestamp | null): number => {
+const calculateReminderDays = (
+  startingDate: Timestamp | null,
+  endingDate: Timestamp | null
+): number => {
   if (!startingDate || !endingDate) return 0;
-  const start = moment(startingDate.toDate());
-  const end = moment(endingDate.toDate());
-  return end.diff(start, 'days');
+
+  const now = moment().startOf("day"); // Start of today
+  const end = moment(endingDate.toDate()).endOf("day"); // End of the end date
+
+  // If already expired, return 0
+  if (now.isAfter(end)) {
+    return 0;
+  }
+
+  // Return remaining days until expiration (inclusive of end date)
+  return end.diff(now, "days") + 1;
 };
 
 export const deleteAccountUser = async (
@@ -376,7 +409,11 @@ export const deleteAccountUser = async (
 ) => {
   try {
     await deleteDoc(
-      doc(firestore, `services/${serviceId}/accounts/${accountId}/users`, userId)
+      doc(
+        firestore,
+        `services/${serviceId}/accounts/${accountId}/users`,
+        userId
+      )
     );
     return { success: true };
   } catch (error) {
@@ -385,9 +422,14 @@ export const deleteAccountUser = async (
   }
 };
 
-export const deleteAllAccountUsers = async ( serviceId: string, accountId: string) => {
+export const deleteAllAccountUsers = async (
+  serviceId: string,
+  accountId: string
+) => {
   try {
-    const q = query(collection(firestore, `services/${serviceId}/accounts/${accountId}/users`));
+    const q = query(
+      collection(firestore, `services/${serviceId}/accounts/${accountId}/users`)
+    );
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach(async (doc) => {
       await deleteDoc(doc.ref);
@@ -397,8 +439,7 @@ export const deleteAllAccountUsers = async ( serviceId: string, accountId: strin
     console.log(error);
     return { success: false };
   }
-
-}
+};
 
 export const updateAccountUser = async (
   serviceId: string,
@@ -408,7 +449,11 @@ export const updateAccountUser = async (
 ) => {
   try {
     await updateDoc(
-      doc(firestore, `services/${serviceId}/accounts/${accountId}/users`, userId),
+      doc(
+        firestore,
+        `services/${serviceId}/accounts/${accountId}/users`,
+        userId
+      ),
       {
         ...user,
       }

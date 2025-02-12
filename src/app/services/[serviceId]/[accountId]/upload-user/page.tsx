@@ -40,7 +40,7 @@ export default function UploadAccounts({
   params,
   searchParams,
 }: {
-  params: { serviceId: string , accountId: string};
+  params: { serviceId: string; accountId: string };
   searchParams: {
     [key: string]: string | string[] | undefined;
   };
@@ -49,13 +49,13 @@ export default function UploadAccounts({
 
   const [accountName, setAccountName] = React.useState<string>("");
   const [serciceName, setServiceName] = React.useState<string>("");
-  const [user , setUser] = React.useState<TUserTabel | null>(null);
+  const [user, setUser] = React.useState<TUserTabel | null>(null);
   // const [value, setOnValueChange] = React.useState<string>("");
   const [startingDate, setStartingDate] = React.useState<Date>();
   const [endingDate, setEndingDate] = React.useState<Date>();
   const accountId = params.accountId;
   const serviceId = params.serviceId;
-  const userId = searchParams.userId as string ;
+  const userId = searchParams.userId as string;
   const form = useForm<TUserAccount>({
     resolver: zodResolver(UserAccount),
     mode: "onChange",
@@ -63,52 +63,46 @@ export default function UploadAccounts({
 
   const [loading, setLoading] = React.useState<boolean>(false);
 
-
   const onSubmit = async (data: TUserAccount) => {
-
-    if(!startingDate || !endingDate) {
+    if (!startingDate || !endingDate) {
       toast.error("please select starting and ending date");
-      return ;
+      return;
     }
-    const userData : TUserData = {
+    const userData: TUserData = {
       ...data,
-      startingDate : startingDate,
-      endingDate : endingDate,
+      startingDate: startingDate,
+      endingDate: endingDate,
       description: data.description || "",
-    }
+    };
 
     setLoading(true);
     try {
-
       // check if we are updating or creating new account
-      if(userId){
-        const {success} = await updateAccountUser(serviceId, accountId, userId, userData);
-        if(success) {
+      if (userId) {
+        const { success } = await updateAccountUser(
+          serviceId,
+          accountId,
+          userId,
+          userData
+        );
+        if (success) {
           toast.success("user updated successfully");
           router.push(`/services/${serviceId}/${accountId}`);
         } else {
           toast.error("error updating user");
         }
-        return ;
+        return;
       }
-       // check if the telephone is unique
-       const {  users } = await getAccountUsers(serviceId, accountId);
-       const user = users ? users?.find(user => user.telephone === data.telephone) : null;
-       if(user?.telephone === data.telephone) {
-         toast.error("telephone must be unique");
-         form.setFocus("telephone");
-         return ;
-       }
-      if(!accountId || !serviceId) return ;
-      const {success} = await addAccountUser(serviceId , accountId , userData);
 
-      if(success) {
+      if (!accountId || !serviceId) return;
+      const { success } = await addAccountUser(serviceId, accountId, userData);
+
+      if (success) {
         toast.success("user added successfully");
         router.push(`/services/${serviceId}/${accountId}`);
       } else {
         toast.error("error adding user");
       }
-
     } catch (error) {
       console.log(error);
       toast.error("error adding user");
@@ -117,8 +111,6 @@ export default function UploadAccounts({
         setLoading(false);
       }, 1000);
     }
-
-
   };
 
   useEffect(() => {
@@ -132,7 +124,7 @@ export default function UploadAccounts({
         return;
       }
       setAccountName(account.name);
-    }
+    };
 
     const fetchServiceName = async () => {
       const { service, success } = await getService(params.serviceId);
@@ -143,48 +135,37 @@ export default function UploadAccounts({
     };
     fetchServiceName();
     fetchAccountName();
+  }, [params.accountId, params.serviceId, accountId]);
 
-  }, [params.accountId , params.serviceId , accountId]);
-
- // get user data
- useEffect(() => {
-  const fetchUserData = async () => {
-    if (!userId) return;
-    const { user, success } = await getAccountUser(serviceId, accountId, userId);
-    if (!success || !user) {
-      return;
-    }
-    setUser(user);
-    setStartingDate(user.startingDate.toDate());
-    setEndingDate(user.endingDate.toDate());
-    form.setValue("telephone", user.telephone);
-    form.setValue("email", user.email);
-    form.setValue("description", user.description);
-  };
-  fetchUserData();
-}, [userId, serviceId, accountId , form]);
+  // get user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userId) return;
+      const { user, success } = await getAccountUser(
+        serviceId,
+        accountId,
+        userId
+      );
+      if (!success || !user) {
+        return;
+      }
+      setUser(user);
+      setStartingDate(user.startingDate.toDate());
+      setEndingDate(user.endingDate.toDate());
+      form.setValue("email", user.email);
+      form.setValue("description", user.description);
+    };
+    fetchUserData();
+  }, [userId, serviceId, accountId, form]);
 
   return (
     <section className="mx-auto sm:flex mt-8 sm:flex-col md:px-8">
       <h1 className="text-2xl  tracking-tight text-center">
-      Creat new user for <span className="font-semibold">{accountName}</span> in <span className="font-semibold">{serciceName}</span> service
+        Create new user for <span className="font-semibold">{accountName}</span>{" "}
+        in <span className="font-semibold">{serciceName}</span> service
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <FormField
-            control={form.control}
-            name="telephone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telephone </FormLabel>
-                <FormControl>
-                  <Input placeholder="your telphone number" {...field} />
-                </FormControl>
-                <FormDescription> your telphone must be unique</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <FormField
             control={form.control}
             name="email"
@@ -198,7 +179,7 @@ export default function UploadAccounts({
               </FormItem>
             )}
           />
-             <div className="flex flex-col gap-y-4 w-full">
+          <div className="flex flex-col gap-y-4 w-full">
             <UserStartingDate date={startingDate} setDate={setStartingDate} />
             <UserEndingDate date={endingDate} setDate={setEndingDate} />
           </div>
@@ -219,14 +200,14 @@ export default function UploadAccounts({
               </FormItem>
             )}
           />
-       
 
           <div className="flex items-center justify-between gap-x-4 w-full">
-            {/* cancel button */}
             <Button
               type="button"
               variant="secondary"
-              onClick={() => router.push(`/services/${params.serviceId}/${params.accountId}`)}
+              onClick={() =>
+                router.push(`/services/${params.serviceId}/${params.accountId}`)
+              }
               className="w-full mx-auto md:max-w-full text-lg"
             >
               cancel

@@ -42,33 +42,87 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TUserTabel } from "@/types/services/user";
+import { TUserTabel, FormattedUserTabel } from "@/types/services/user";
 import { deleteAccountUser, deleteAllAccountUsers } from "@/app/action";
 import { useRouter } from "next/navigation";
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { toast } from "sonner";
 
-const formatDate = (timestamp: Timestamp | null): string => {
-  return timestamp
-    ? moment(timestamp?.toDate()).format("YYYY/MM/DD")
-    : "Invalid date";
+const formatDate = (timestamp: Timestamp | null | any): string => {
+  if (!timestamp) return "Invalid date";
+
+  try {
+    // Check if it's a Firestore Timestamp
+    if (timestamp instanceof Timestamp) {
+      return moment(timestamp.toDate()).format("YYYY/MM/DD");
+    }
+    // Check if it's a Firebase server timestamp (has seconds and nanoseconds)
+    if (
+      timestamp.seconds !== undefined &&
+      timestamp.nanoseconds !== undefined
+    ) {
+      return moment(new Date(timestamp.seconds * 1000)).format("YYYY/MM/DD");
+    }
+    // If it's already a Date object
+    if (timestamp instanceof Date) {
+      return moment(timestamp).format("YYYY/MM/DD");
+    }
+    // If it's a timestamp number
+    if (typeof timestamp === "number") {
+      return moment(timestamp).format("YYYY/MM/DD");
+    }
+    return "Invalid date";
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return "Invalid date";
+  }
 };
 
 const updateSubscriptionStatus = (
-  timestamp: Timestamp | null
+  timestamp: Timestamp | null | any
 ): "Active" | "Expired" => {
-  return timestamp && moment().isBefore(timestamp.toDate())
-    ? "Active"
-    : "Expired";
+  if (!timestamp) return "Expired";
+
+  try {
+    let date: Date;
+
+    // Check if it's a Firestore Timestamp
+    if (timestamp instanceof Timestamp) {
+      date = timestamp.toDate();
+    }
+    // Check if it's a Firebase server timestamp
+    else if (
+      timestamp.seconds !== undefined &&
+      timestamp.nanoseconds !== undefined
+    ) {
+      date = new Date(timestamp.seconds * 1000);
+    }
+    // If it's already a Date object
+    else if (timestamp instanceof Date) {
+      date = timestamp;
+    }
+    // If it's a timestamp number
+    else if (typeof timestamp === "number") {
+      date = new Date(timestamp);
+    } else {
+      return "Expired";
+    }
+
+    return moment().isBefore(date) ? "Active" : "Expired";
+  } catch (error) {
+    console.error("Error checking subscription status:", error);
+    return "Expired";
+  }
 };
 
 export default function UsersTable({
   users,
   params,
 }: {
-  users: TUserTabel[];
+  users: FormattedUserTabel[];
   params: { serviceId: string; accountId: string };
 }) {
+  console.log("from users table", params);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -93,7 +147,7 @@ export default function UsersTable({
   const [usersToDelete, setUsersToDelete] = React.useState<string[]>([]);
   const router = useRouter();
 
-  const handleEditUser = async (user: TUserTabel) => {
+  const handleEditUser = async (user: FormattedUserTabel) => {
     // Add logic to handle editing a user
     console.log(
       "Edit user:",
@@ -146,25 +200,28 @@ export default function UsersTable({
       params.accountId
     );
     try {
-      const {success} = await deleteAllAccountUsers(params.serviceId, params.accountId)
-      if(success){
+      const { success } = await deleteAllAccountUsers(
+        params.serviceId,
+        params.accountId
+      );
+      if (success) {
         setTimeout(() => {
           console.log("users deleted successfully");
           toast.success("Users deleted successfully");
           router.refresh();
-        } , 1000);
-      }else {
+        }, 1000);
+      } else {
         console.log("error deleting users");
         toast.error("Error deleting users");
       }
     } catch (error) {
-      console.error('Error deleting multiple users:', error)
+      console.error("Error deleting multiple users:", error);
       toast.error("Error deleting users");
     }
   };
 
   // columns
-  const columns: ColumnDef<TUserTabel>[] = [
+  const columns: ColumnDef<FormattedUserTabel>[] = [
     {
       id: "select",
       header: ({ table }) => (
@@ -202,21 +259,16 @@ export default function UsersTable({
       enableSorting: false, // Disable sorting by email
     },
     {
-      accessorKey: "telephone",
-      header: "Telephone",
-      cell: ({ row }) => <div>{row.getValue("telephone")}</div>,
-    },
-    {
       accessorKey: "startingDate",
       header: "Starting Date",
-      cell: ({ row }) => <div>{formatDate(row.original.startingDate)}</div>,
-      enableSorting: false, // Ensure sorting is disabled
+      cell: ({ row }) => <div>{row.getValue("startingDate")}</div>,
+      enableSorting: false,
     },
     {
       accessorKey: "endingDate",
       header: "Ending Date",
-      cell: ({ row }) => <div>{formatDate(row.original.endingDate)}</div>,
-      enableSorting: false, // Ensure sorting is disabled
+      cell: ({ row }) => <div>{row.getValue("endingDate")}</div>,
+      enableSorting: false,
     },
     {
       accessorKey: "reminderDays",
@@ -230,8 +282,8 @@ export default function UsersTable({
         </Button>
       ),
       cell: ({ row }) => <div>{row.getValue("reminderDays")} days</div>,
-      sortingFn: "basic", // Use 'basic' sorting function for numerical sorting
-      enableSorting: true, // Ensure sorting is enabled
+      sortingFn: "basic",
+      enableSorting: true,
     },
     {
       accessorKey: "subscriptionStatus",
@@ -285,7 +337,13 @@ export default function UsersTable({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push(`/services/${params.serviceId}/${params.accountId}/upload-user?userId=${user.id}`)}>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(
+                    `/services/${params.serviceId}/${params.accountId}/upload-user?userId=${user.id}`
+                  )
+                }
+              >
                 Edit user
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -305,20 +363,15 @@ export default function UsersTable({
   ];
 
   const [processedUsers, setProcessedUsers] = React.useState<
-    Array<
-      TUserTabel & {
-        formattedStartingDate: string;
-        formattedEndingDate: string;
-      }
-    >
+    FormattedUserTabel[]
   >([]);
 
   React.useEffect(() => {
     const updatedData = users.map((user) => ({
       ...user,
-      subscriptionStatus: updateSubscriptionStatus(user.endingDate),
-      formattedStartingDate: formatDate(user.startingDate),
-      formattedEndingDate: formatDate(user.endingDate),
+      subscriptionStatus: moment(user.endingDate).isAfter(moment())
+        ? "Active"
+        : "Expired",
     }));
     setProcessedUsers(updatedData);
   }, [users]);
@@ -357,12 +410,10 @@ export default function UsersTable({
       />
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter by telephone..."
-          value={
-            (table.getColumn("telephone")?.getFilterValue() as string) ?? ""
-          }
+          placeholder="Filter by email..."
+          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("telephone")?.setFilterValue(event.target.value)
+            table.getColumn("email")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

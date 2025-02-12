@@ -1,10 +1,8 @@
-"use client";
 
 import { getService, getServiceAccounts } from "@/app/action";
 import { DeleteModal } from "@/components/dashboard/DeleteModel";
 import NoServicesFound from "@/components/dashboard/NoServicesFound";
 import ServiceHeader from "@/components/dashboard/ServiceHeader";
-import React, { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import AccountCard from "@/components/dashboard/AccountCard";
 import { ServiceAccount } from "@/types/services/service-accounts";
@@ -18,22 +16,14 @@ interface PosteProps {
   };
 }
 
-export default function ServiceName({ params, searchParams }: PosteProps) {
-  const [accounts, setAccounts] = React.useState<ServiceAccount[] | []>([]);
+
+export default async function ServiceName({ params, searchParams }: PosteProps) {
 
   const { serviceId } = params;
 
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      const { accounts, success } = await getServiceAccounts(serviceId);
-      if (!success || !accounts) {
-        return;
-      }
-      setAccounts(accounts);
-    };
-
-    fetchAccounts();
-  }, [serviceId]);
+  
+  const { accounts, success } = await getServiceAccounts(serviceId);
+  
 
   return (
     <section>
