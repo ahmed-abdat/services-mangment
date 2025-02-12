@@ -1,10 +1,7 @@
 
 import NoServicesFound from "@/components/dashboard/NoServicesFound";
 import ServiceHeader from "@/components/dashboard/ServiceHeader";
-import { getServices } from "@/app/action";
-import Image from "next/image";
-import Link from "next/link";
-import { Settings, Trash } from "lucide-react";
+import { getServices } from "@/app/actions/services";
 import ServiceCard from "@/components/dashboard/ServiceCard";
 import { DeleteModal } from "@/components/dashboard/DeleteModel";
 

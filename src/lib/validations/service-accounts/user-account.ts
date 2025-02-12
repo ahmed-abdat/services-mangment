@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const UserAccount = z.object({
-  email: z.string().email(),
+  fullName: z.string().min(2, {
+    message: "Full name must be at least 2 characters long.",
+  }),
   description: z
     .string()
     .max(50, {

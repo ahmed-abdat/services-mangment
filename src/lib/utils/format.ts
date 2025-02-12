@@ -8,7 +8,7 @@ export function formatUserForClient(
     // Return a default formatted user if input is null/undefined
     return {
       id: "",
-      email: "",
+      fullName: "",
       description: "",
       startingDate: null,
       endingDate: null,
@@ -17,14 +17,14 @@ export function formatUserForClient(
     };
   }
 
-  // Convert Firestore Timestamps to ISO strings
+  // Format dates if they are strings
   const formattedUser = {
     ...user,
     startingDate: user.startingDate
-      ? moment(user.startingDate.toDate()).format("YYYY-MM-DD")
+      ? moment(user.startingDate).format("YYYY-MM-DD")
       : null,
     endingDate: user.endingDate
-      ? moment(user.endingDate.toDate()).format("YYYY-MM-DD")
+      ? moment(user.endingDate).format("YYYY-MM-DD")
       : null,
   };
 

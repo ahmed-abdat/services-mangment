@@ -23,14 +23,11 @@ import {
 import { toast } from "sonner";
 import {
   addAccountUser,
-  addServiceAccount,
   getAccountUser,
-  getAccountUsers,
-  getService,
-  getServiceAccount,
   updateAccountUser,
-  updateServiceAccount,
-} from "@/app/action";
+} from "@/app/actions/users";
+import { getService } from "@/app/actions/services";
+import { getServiceAccount } from "@/app/actions/accounts";
 import { useRouter } from "next/navigation";
 import UserStartingDate from "@/components/dashboard/users/UserStartingDate";
 import UserEndingDate from "@/components/dashboard/users/UserEndingDate";
@@ -50,66 +47,122 @@ export default function UploadAccounts({
   const [accountName, setAccountName] = React.useState<string>("");
   const [serciceName, setServiceName] = React.useState<string>("");
   const [user, setUser] = React.useState<TUserTabel | null>(null);
-  // const [value, setOnValueChange] = React.useState<string>("");
   const [startingDate, setStartingDate] = React.useState<Date>();
   const [endingDate, setEndingDate] = React.useState<Date>();
+  const [loading, setLoading] = React.useState<boolean>(false);
+
   const accountId = params.accountId;
   const serviceId = params.serviceId;
   const userId = searchParams.userId as string;
+
   const form = useForm<TUserAccount>({
     resolver: zodResolver(UserAccount),
     mode: "onChange",
+    defaultValues: {
+      fullName: "",
+      description: "",
+    },
   });
 
-  const [loading, setLoading] = React.useState<boolean>(false);
+  // get user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userId) {
+        console.log("No userId provided, skipping fetch");
+        return;
+      }
+      
+      try {
+        const {
+          data: user,
+          success,
+          error,
+        } = await getAccountUser(serviceId, accountId, userId);
+
+
+        if (!success || !user) {
+          console.error("Failed to load user:", error);
+          toast.error(error || "Error loading user data");
+          return;
+        }
+
+        // Set the user data
+        setUser(user);
+
+        // Convert ISO string dates to Date objects for the date pickers
+        if (user.startingDate && user.endingDate) {
+          const start = new Date(user.startingDate);
+          const end = new Date(user.endingDate);
+          setStartingDate(start);
+          setEndingDate(end);
+        }
+
+        // Reset form with user data
+        const formData = {
+          fullName: user.fullName,
+          description: user.description || "",
+        };
+        form.reset(formData);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        toast.error("Failed to load user data");
+      }
+    };
+
+    fetchUserData();
+  }, [userId, serviceId, accountId, form]);
 
   const onSubmit = async (data: TUserAccount) => {
+
     if (!startingDate || !endingDate) {
-      toast.error("please select starting and ending date");
+      toast.error("Please select starting and ending date");
       return;
     }
-    const userData: TUserData = {
-      ...data,
-      startingDate: startingDate,
-      endingDate: endingDate,
-      description: data.description || "",
-    };
 
     setLoading(true);
     try {
-      // check if we are updating or creating new account
+      const userData: TUserData = {
+        ...data,
+        startingDate,
+        endingDate,
+        description: data.description || "",
+      };
+
       if (userId) {
-        const { success } = await updateAccountUser(
+        // Update existing user
+        const { success, error } = await updateAccountUser(
           serviceId,
           accountId,
           userId,
           userData
         );
+
         if (success) {
-          toast.success("user updated successfully");
+          toast.success("User updated successfully");
           router.push(`/services/${serviceId}/${accountId}`);
         } else {
-          toast.error("error updating user");
+          toast.error(error || "Error updating user");
         }
-        return;
-      }
-
-      if (!accountId || !serviceId) return;
-      const { success } = await addAccountUser(serviceId, accountId, userData);
-
-      if (success) {
-        toast.success("user added successfully");
-        router.push(`/services/${serviceId}/${accountId}`);
       } else {
-        toast.error("error adding user");
+        // Create new user
+        const { success, error } = await addAccountUser(
+          serviceId,
+          accountId,
+          userData
+        );
+
+        if (success) {
+          toast.success("User added successfully");
+          router.push(`/services/${serviceId}/${accountId}`);
+        } else {
+          toast.error(error || "Error adding user");
+        }
       }
     } catch (error) {
-      console.log(error);
-      toast.error("error adding user");
+      console.error("Error saving user:", error);
+      toast.error("Failed to save user");
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
@@ -137,44 +190,27 @@ export default function UploadAccounts({
     fetchAccountName();
   }, [params.accountId, params.serviceId, accountId]);
 
-  // get user data
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!userId) return;
-      const { user, success } = await getAccountUser(
-        serviceId,
-        accountId,
-        userId
-      );
-      if (!success || !user) {
-        return;
-      }
-      setUser(user);
-      setStartingDate(user.startingDate.toDate());
-      setEndingDate(user.endingDate.toDate());
-      form.setValue("email", user.email);
-      form.setValue("description", user.description);
-    };
-    fetchUserData();
-  }, [userId, serviceId, accountId, form]);
-
   return (
     <section className="mx-auto sm:flex mt-8 sm:flex-col md:px-8">
-      <h1 className="text-2xl  tracking-tight text-center">
-        Create new user for <span className="font-semibold">{accountName}</span>{" "}
-        in <span className="font-semibold">{serciceName}</span> service
+      <h1 className="text-2xl tracking-tight text-center">
+        {userId ? "Update" : "Create new"} user for{" "}
+        <span className="font-semibold">{accountName}</span> in{" "}
+        <span className="font-semibold">{serciceName}</span> service
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
-            name="email"
+            name="fullName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>email </FormLabel>
+                <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="your email" {...field} />
+                  <Input placeholder="Enter full name" {...field} />
                 </FormControl>
+                <FormDescription>
+                  This is the name that will be displayed for the user.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -188,10 +224,10 @@ export default function UploadAccounts({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel> description </FormLabel>
+                <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="your description here"
+                    placeholder="Add a description (optional)"
                     className="resize-none min-h-20"
                     {...field}
                   />
@@ -210,15 +246,15 @@ export default function UploadAccounts({
               }
               className="w-full mx-auto md:max-w-full text-lg"
             >
-              cancel
+              Cancel
             </Button>
             <Button
               type="submit"
               className="w-full mx-auto md:max-w-full text-lg"
               disabled={loading}
             >
-              {userId ? "update account" : "create new account"}
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {userId ? "Update User" : "Create User"}
+              {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
             </Button>
           </div>
         </form>

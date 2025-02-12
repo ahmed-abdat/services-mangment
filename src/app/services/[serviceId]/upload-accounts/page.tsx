@@ -21,8 +21,16 @@ import {
   AccountsService,
 } from "@/lib/validations/service-accounts/accounts-services";
 import { toast } from "sonner";
-import { addServiceAccount, checkifAccountNameExiste, getService, getServiceAccount, updateServiceAccount } from "@/app/action";
+import {
+  addServiceAccount,
+  checkifAccountNameExiste,
+  getServiceAccount,
+  getServiceAccounts,
+  updateServiceAccount,
+} from "@/app/actions/accounts";
+import { getService } from "@/app/actions/services";
 import { useRouter } from "next/navigation";
+import { ServiceAccount } from "@/types/services/service-accounts";
 
 export default function UploadAccounts({
   params,
@@ -60,40 +68,57 @@ export default function UploadAccounts({
         return;
       }
       form.setValue("name", account.name);
+      form.setValue("email", account.email);
       form.setValue("details", account.details);
-      console.log(`account details : ${account}`);
     };
     fetchServiceName();
     fechAccountDetails();
-  }, [params.serviceId , accountId , form]);
+  }, [params.serviceId, accountId, form]);
 
   const [loading, setLoading] = React.useState<boolean>(false);
 
-
   const onSubmit = async (data: TAccountsService) => {
-
     try {
       setLoading(true);
+
+      // Check if account name exists
       const { success: isNameExiste } = await checkifAccountNameExiste(
         params.serviceId,
         data.name.trim()
-      )
-      if (isNameExiste) {
-        toast.error("account name already existe");
+      );
+      if (isNameExiste && !accountId) {
+        toast.error("Account name already exists");
         form.setFocus("name");
         setLoading(false);
         return;
       }
 
+      // Check if email exists in any account
+      const { accounts } = await getServiceAccounts(params.serviceId);
+      const emailExists = accounts.some(
+        (account: ServiceAccount) =>
+          account.email === data.email && account.id !== accountId
+      );
+      if (emailExists) {
+        toast.error("Email already exists in another account");
+        form.setFocus("email");
+        setLoading(false);
+        return;
+      }
+
       // check if we are updating the account
-      if ( accountId ) {
-        const {success} = await updateServiceAccount(params.serviceId, accountId, data);
-        if(success) {
-          toast.success("account updated successfully");
+      if (accountId) {
+        const { success } = await updateServiceAccount(
+          params.serviceId,
+          accountId,
+          data
+        );
+        if (success) {
+          toast.success("Account updated successfully");
           form.reset();
           router.push(`/services/${params.serviceId}`);
-        }else {
-          toast.error("error while updating account");
+        } else {
+          toast.error("Error while updating account");
         }
         setLoading(false);
         return;
@@ -102,23 +127,24 @@ export default function UploadAccounts({
       const { success } = await addServiceAccount(params.serviceId, data);
 
       if (success) {
-        toast.success("new account created successfully");
+        toast.success("New account created successfully");
         form.reset();
         router.push(`/services/${params.serviceId}`);
       } else {
-        toast.error("error while creating new account");
+        toast.error("Error while creating new account");
       }
       setLoading(false);
     } catch (error) {
       console.log(error);
-      toast.error("error while creating new account");
+      toast.error("Error while creating new account");
+      setLoading(false);
     }
   };
 
   return (
     <section className="mx-auto sm:flex mt-8 sm:flex-col md:px-8">
       <h1 className="text-2xl font-semibold tracking-tight text-center">
-        Creat New {serviceName} Service Accounts
+        {accountId ? "Update" : "Create New"} {serviceName} Service Account
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -127,11 +153,31 @@ export default function UploadAccounts({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>account name </FormLabel>
+                <FormLabel>Account Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="your account name here" {...field} />
+                  <Input placeholder="Enter account name" {...field} />
                 </FormControl>
-                <FormDescription>account name must be unique</FormDescription>
+                <FormDescription>Account name must be unique</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Account Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Enter account email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Each account must have a unique email
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -141,10 +187,10 @@ export default function UploadAccounts({
             name="details"
             render={({ field }) => (
               <FormItem>
-                <FormLabel> account details </FormLabel>
+                <FormLabel>Account Details</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="your account details here"
+                    placeholder="Enter account details"
                     className="resize-none min-h-20"
                     {...field}
                   />
@@ -155,21 +201,20 @@ export default function UploadAccounts({
           />
 
           <div className="flex items-center justify-between gap-x-4 w-full">
-            {/* cancel button */}
             <Button
               type="button"
               variant="secondary"
               onClick={() => router.push(`/services/${params.serviceId}`)}
               className="w-full mx-auto md:max-w-full text-lg"
             >
-              cancel
+              Cancel
             </Button>
             <Button
               type="submit"
               className="w-full mx-auto md:max-w-full text-lg"
               disabled={loading}
             >
-              {accountId ? "update account" : "create new account"}
+              {accountId ? "Update Account" : "Create Account"}
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             </Button>
           </div>

@@ -7,15 +7,16 @@ export type TUserDate = {
 
 export type TUserData = {
   id?: string;
-  email: string;
+  fullName: string;
   description: string;
   startingDate: Date;
   endingDate: Date;
 };
 
-export type TUserTabel = {
+// For internal use with Firestore
+export type TUserFirestore = {
   id?: string;
-  email: string;
+  fullName: string;
   description: string;
   startingDate: Timestamp;
   endingDate: Timestamp;
@@ -23,10 +24,15 @@ export type TUserTabel = {
   subscriptionStatus?: string;
 };
 
-export type FormattedUserTabel = Omit<
-  TUserTabel,
-  "startingDate" | "endingDate"
-> & {
+// For use in the application (after data is fetched)
+export type TUserTabel = {
+  id?: string;
+  fullName: string;
+  description: string;
   startingDate: string | null;
   endingDate: string | null;
+  reminderDays: number;
+  subscriptionStatus?: string;
 };
+
+export type FormattedUserTabel = TUserTabel;

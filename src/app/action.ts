@@ -103,23 +103,43 @@ export const getService = async (name: string) => {
 
 export const deleteService = async (id: string, thumbnail: Thumbnail) => {
   try {
-    await deleteDoc(doc(firestore, "services", id));
-    await deleteThumbnail(id, thumbnail);
-    // delete the accounts sub collection
+    // First, delete all users in all accounts
     const accountsRef = collection(firestore, `services/${id}/accounts`);
-    const accounts = await getDocs(accountsRef);
-    accounts.forEach(async (doc) => {
-      await deleteDoc(doc.ref);
-    });
-    // delet the users sub collection
-    const usersRef = collection(firestore, `services/${id}/users`);
-    const users = await getDocs(usersRef);
-    users.forEach(async (doc) => {
-      await deleteDoc(doc.ref);
-    });
+    const accountsSnapshot = await getDocs(accountsRef);
+
+    // Delete all users for each account
+    for (const accountDoc of accountsSnapshot.docs) {
+      const usersRef = collection(
+        firestore,
+        `services/${id}/accounts/${accountDoc.id}/users`
+      );
+      const usersSnapshot = await getDocs(usersRef);
+
+      // Delete each user document
+      const userDeletions = usersSnapshot.docs.map((userDoc) =>
+        deleteDoc(
+          doc(
+            firestore,
+            `services/${id}/accounts/${accountDoc.id}/users`,
+            userDoc.id
+          )
+        )
+      );
+      await Promise.all(userDeletions);
+
+      // Delete the account document
+      await deleteDoc(doc(firestore, `services/${id}/accounts`, accountDoc.id));
+    }
+
+    // Delete the service thumbnail from storage
+    await deleteThumbnail(id, thumbnail);
+
+    // Finally delete the service document itself
+    await deleteDoc(doc(firestore, "services", id));
+
     return { success: true };
   } catch (error) {
-    console.log(error);
+    console.error("Error deleting service:", error);
     return { success: false };
   }
 };
@@ -348,7 +368,7 @@ export const getAccountUser = async (
     const querySnapshot = await getDoc(docRef);
     const user = { ...querySnapshot.data() } as TUserTabel;
     if (
-      !user.email ||
+      !user.fullName ||
       !user.description ||
       !user.startingDate ||
       !user.endingDate
@@ -368,18 +388,34 @@ export const getAccountUsers = async (serviceId: string, accountId: string) => {
   try {
     const querySnapshot = await getDocs(q);
 
+
     const users: TUserTabel[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      const reminderDays = calculateReminderDays(
-        data.startingDate,
-        data.endingDate
-      );
-      users.push({ id: doc.id, ...data, reminderDays } as TUserTabel);
+
+      // Ensure timestamps are treated as Firestore Timestamp objects
+      const startingDate = data.startingDate as Timestamp;
+      const endingDate = data.endingDate as Timestamp;
+
+      // Calculate reminder days based on starting and ending dates
+      const reminderDays = calculateReminderDays(startingDate, endingDate);
+
+      // Construct the user object with proper type and data transformations
+      const user: TUserTabel = {
+        id: doc.id,
+        fullName: data.fullName,
+        description: data.description || "", // Default to empty string if description is missing
+        startingDate: startingDate ? startingDate.toDate().toISOString() : null, // Convert Timestamp to ISO string or null
+        endingDate: endingDate ? endingDate.toDate().toISOString() : null, // Convert Timestamp to ISO string or null
+        reminderDays,
+        subscriptionStatus: data.subscriptionStatus || "active", // Default to 'active' if status is missing
+      };
+      users.push(user);
     });
+
     return { success: true, users };
   } catch (error) {
-    console.log(error);
+    console.error("Error in getAccountUsers:", error);
     return { success: false, users: null };
   }
 };

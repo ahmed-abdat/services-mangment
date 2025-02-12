@@ -4,6 +4,9 @@ export const AccountsService = z.object({
   name: z.string().min(2, {
     message: "account name must be at least 2 characters long",
   }),
+  email: z.string().email({
+    message: "Please enter a valid email address",
+  }),
   details: z
     .string()
     .max(50, {

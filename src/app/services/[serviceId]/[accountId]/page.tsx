@@ -3,6 +3,7 @@ import NoServicesFound from "@/components/dashboard/NoServicesFound";
 import UsersHeader from "@/components/dashboard/users/UsersHeader";
 import UsersTabel from "@/components/dashboard/users/UserTabel";
 import { formatUserForClient } from "@/lib/utils/format";
+import { TUserTabel } from "@/types/services/user";
 
 interface PosteProps {
   params: {
@@ -20,13 +21,15 @@ export default async function ServiceName({
 }: PosteProps) {
   const { serviceId, accountId } = params;
 
-  const { success, users } = await getAccountUsers(serviceId, accountId);
-  if (!success) {
+  const { users, success } = await getAccountUsers(serviceId, accountId);
+  if (!success || !users) {
     return <div>Error loading users</div>;
   }
 
   // Format users data for client components and ensure no null values
-  const formattedUsers = (users ?? []).map((user) => formatUserForClient(user));
+  const formattedUsers = users.map((user: TUserTabel) =>
+    formatUserForClient(user)
+  );
 
   return (
     <section>

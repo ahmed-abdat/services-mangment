@@ -62,9 +62,9 @@ export default function DashboardLinks() {
                   {isLast ? (
                     <BreadcrumbPage>{displayName}</BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink>
-                      <Link href={href}>{displayName}</Link>
-                    </BreadcrumbLink>
+                    <Link href={href} legacyBehavior passHref>
+                      <BreadcrumbLink>{displayName}</BreadcrumbLink>
+                    </Link>
                   )}
                 </BreadcrumbItem>
                 {!isLast && <BreadcrumbSeparator />}
