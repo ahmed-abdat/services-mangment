@@ -1,7 +1,8 @@
 {
-  "name": "unem-dashboard",
+  "name": "rimcode-services-dashboard",
   "version": "0.1.0",
   "private": true,
+  "description": "RIMcode's service management dashboard for managing and monitoring services, accounts, and user subscriptions",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
