@@ -1,11 +1,14 @@
 import { getAccountUsers } from "@/app/action";
+import { getServiceAccount } from "@/app/actions/accounts";
 import NoServicesFound from "@/components/dashboard/NoServicesFound";
 import UsersHeader from "@/components/dashboard/users/UsersHeader";
 import UsersTabel from "@/components/dashboard/users/UserTabel";
 import { formatUserForClient } from "@/lib/utils/format";
 import { TUserTabel } from "@/types/services/user";
+import { Suspense } from "react";
+import { toast } from "sonner";
 
-interface PosteProps {
+interface PageProps {
   params: {
     serviceId: string;
     accountId: string;
@@ -15,31 +18,72 @@ interface PosteProps {
   };
 }
 
-export default async function ServiceName({
+// Loading component for the table
+function LoadingTable() {
+  return (
+    <div className="w-full h-96 flex items-center justify-center">
+      <div className="animate-pulse text-gray-500">Loading users data...</div>
+    </div>
+  );
+}
+
+// Error component
+function ErrorDisplay({ message }: { message: string }) {
+  return (
+    <div className="w-full p-4 text-center">
+      <p className="text-red-500">{message}</p>
+    </div>
+  );
+}
+
+export default async function ServiceAccountPage({
   params,
   searchParams,
-}: PosteProps) {
+}: PageProps) {
   const { serviceId, accountId } = params;
 
-  const { users, success } = await getAccountUsers(serviceId, accountId);
-  if (!success || !users) {
-    return <div>Error loading users</div>;
+  try {
+    // Fetch account details and users in parallel
+    const [accountResponse, usersResponse] = await Promise.all([
+      getServiceAccount(serviceId, accountId),
+      getAccountUsers(serviceId, accountId),
+    ]);
+
+    if (!accountResponse.success || !accountResponse.account) {
+      return <ErrorDisplay message="Error loading account details" />;
+    }
+
+    if (!usersResponse.success || !usersResponse.users) {
+      return <ErrorDisplay message="Error loading users" />;
+    }
+
+    // Format users data for client components and ensure no null values
+    const formattedUsers = usersResponse.users.map((user: TUserTabel) =>
+      formatUserForClient(user)
+    );
+
+    return (
+      <section className="space-y-6">
+        <Suspense fallback={<div>Loading header...</div>}>
+          <UsersHeader
+            serviceId={serviceId}
+            accountId={accountId}
+            accountName={accountResponse.account.name}
+          />
+        </Suspense>
+
+        <Suspense fallback={<LoadingTable />}>
+          {formattedUsers.length === 0 ? (
+            <NoServicesFound serviceId={serviceId} />
+          ) : (
+            <UsersTabel users={formattedUsers} params={params} />
+          )}
+        </Suspense>
+      </section>
+    );
+  } catch (error) {
+    console.error("Error in ServiceAccountPage:", error);
+    toast.error("An error occurred while loading the page");
+    return <ErrorDisplay message="An unexpected error occurred" />;
   }
-
-  // Format users data for client components and ensure no null values
-  const formattedUsers = users.map((user: TUserTabel) =>
-    formatUserForClient(user)
-  );
-
-  return (
-    <section>
-      {/* <DeleteModal searchParams={searchParams} /> */}
-      <UsersHeader serviceId={serviceId} accountId={accountId} />
-      {formattedUsers.length === 0 ? (
-        <NoServicesFound serviceId={serviceId} />
-      ) : (
-        <UsersTabel users={formattedUsers} params={params} />
-      )}
-    </section>
-  );
 }

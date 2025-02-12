@@ -1,54 +1,64 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, memo } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getServiceAccount } from "@/app/action";
+import { getServiceAccount } from "@/app/actions/accounts";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-export default function ServiceHeader({
-  serviceId,
-  accountId,
-}: {
+interface UsersHeaderProps {
   serviceId?: string;
   accountId?: string;
-}) {
-  const uploadservesurl = `/services/${serviceId}/${accountId}/upload-user`;
+  accountName?: string;
+}
+
+function UsersHeader({
+  serviceId,
+  accountId,
+  accountName: initialAccountName,
+}: UsersHeaderProps) {
   const router = useRouter();
-  const [accountName, setAccountName] = React.useState<string>("");
+  const [accountName, setAccountName] = React.useState<string>(
+    initialAccountName || ""
+  );
+  const uploadservesurl = `/services/${serviceId}/${accountId}/upload-user`;
 
-  // check if user is logged in
-  useEffect(() => {
-    const localeUser = localStorage?.getItem("user") ?? "";
-    if (serviceId) return;
-    if (localeUser) {
-      router.push("/services");
-      router.refresh();
-      return;
-    } else {
-      router.push(`/`);
-    }
-  }, [router, serviceId]);
+  // Memoize the fetch function to prevent unnecessary recreations
+  const fetchAccountName = useCallback(async () => {
+    if (!serviceId || !accountId) return;
 
-  useEffect(() => {
-    if (!serviceId) {
-      return;
-    }
-    const fetchAccountName = async () => {
-      if (!accountId) return;
-
+    try {
       const { account, success } = await getServiceAccount(
         serviceId,
         accountId
       );
       if (!success || !account) {
+        toast.error("Failed to load account details");
         return;
       }
       setAccountName(account.name);
-    };
-    fetchAccountName();
+    } catch (error) {
+      console.error("Error fetching account name:", error);
+      toast.error("Error loading account details");
+    }
   }, [serviceId, accountId]);
+
+  // Check authentication
+  useEffect(() => {
+    const localeUser = localStorage?.getItem("user");
+    if (!localeUser && !serviceId) {
+      router.push("/");
+    }
+  }, [router, serviceId]);
+
+  // Fetch account name if not provided
+  useEffect(() => {
+    if (!initialAccountName) {
+      fetchAccountName();
+    }
+  }, [fetchAccountName, initialAccountName]);
 
   return (
     <div className="items-start justify-between py-4 border-b sm:flex mt-12">
@@ -73,3 +83,6 @@ export default function ServiceHeader({
     </div>
   );
 }
+
+// Memoize the component to prevent unnecessary re-renders
+export default memo(UsersHeader);
