@@ -61,6 +61,7 @@ export default function UploadAccounts({
     defaultValues: {
       fullName: "",
       description: "",
+      phone_number: "",
     },
   });
 
@@ -71,14 +72,13 @@ export default function UploadAccounts({
         console.log("No userId provided, skipping fetch");
         return;
       }
-      
+
       try {
         const {
           data: user,
           success,
           error,
         } = await getAccountUser(serviceId, accountId, userId);
-
 
         if (!success || !user) {
           console.error("Failed to load user:", error);
@@ -101,6 +101,7 @@ export default function UploadAccounts({
         const formData = {
           fullName: user.fullName,
           description: user.description || "",
+          phone_number: user.phone_number || "",
         };
         form.reset(formData);
       } catch (error) {
@@ -113,7 +114,6 @@ export default function UploadAccounts({
   }, [userId, serviceId, accountId, form]);
 
   const onSubmit = async (data: TUserAccount) => {
-
     if (!startingDate || !endingDate) {
       toast.error("Please select starting and ending date");
       return;
@@ -210,6 +210,26 @@ export default function UploadAccounts({
                 </FormControl>
                 <FormDescription>
                   This is the name that will be displayed for the user.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="phone_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number (Optional)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="tel"
+                    placeholder="Enter phone number"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Format: 42049074
                 </FormDescription>
                 <FormMessage />
               </FormItem>

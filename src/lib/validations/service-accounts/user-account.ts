@@ -10,6 +10,12 @@ export const UserAccount = z.object({
       message: "Description must be at most 50 characters long.",
     })
     .optional(),
+  phone_number: z
+    .string()
+    .regex(/^\d{8}$/, {
+      message: "Phone number must be exactly 8 digits.",
+    })
+    .optional(),
 });
 
 export type TUserAccount = z.infer<typeof UserAccount>;

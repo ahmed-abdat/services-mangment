@@ -9,6 +9,7 @@ export type TUserData = {
   id?: string;
   fullName: string;
   description: string;
+  phone_number?: string;
   startingDate: Date;
   endingDate: Date;
 };
@@ -18,6 +19,7 @@ export type TUserFirestore = {
   id?: string;
   fullName: string;
   description: string;
+  phone_number?: string;
   startingDate: Timestamp;
   endingDate: Timestamp;
   reminderDays: number;
@@ -29,6 +31,7 @@ export type TUserTabel = {
   id?: string;
   fullName: string;
   description: string;
+  phone_number?: string;
   startingDate: string | null;
   endingDate: string | null;
   reminderDays: number;

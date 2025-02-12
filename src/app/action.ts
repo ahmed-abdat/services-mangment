@@ -404,6 +404,7 @@ export const getAccountUsers = async (serviceId: string, accountId: string) => {
       const user: TUserTabel = {
         id: doc.id,
         fullName: data.fullName,
+        phone_number: data.phone_number || "",
         description: data.description || "", // Default to empty string if description is missing
         startingDate: startingDate ? startingDate.toDate().toISOString() : null, // Convert Timestamp to ISO string or null
         endingDate: endingDate ? endingDate.toDate().toISOString() : null, // Convert Timestamp to ISO string or null

@@ -130,6 +130,7 @@ export default function UsersTable({
     React.useState<VisibilityState>({
       id: false,
       fullName: true,
+      phone_number: true,
       description: false,
       startingDate: true,
       endingDate: true,
@@ -144,6 +145,8 @@ export default function UsersTable({
   const [userId, setUserId] = React.useState<string | null>(null);
   const [usersToDelete, setUsersToDelete] = React.useState<string[]>([]);
   const router = useRouter();
+
+  console.log(users);
 
   const handleEditUser = async (user: FormattedUserTabel) => {
     // Add logic to handle editing a user
@@ -253,6 +256,14 @@ export default function UsersTable({
       header: "Full Name",
       cell: ({ row }) => (
         <div className="capitalize">{row.getValue("fullName")}</div>
+      ),
+      enableSorting: true,
+    },
+    {
+      accessorKey: "phone_number",
+      header: "Phone Number",
+      cell: ({ row }) => (
+        <div>{row.getValue("phone_number") || "Not provided"}</div>
       ),
       enableSorting: true,
     },
