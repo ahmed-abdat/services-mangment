@@ -50,7 +50,7 @@ export default async function ServiceName({
       {!hasAccounts ? (
         <NoServicesFound serviceId={serviceId} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-8 mt-4">
           {accounts.map((account: ServiceAccount) => (
             <AccountCard
               key={account.id}
