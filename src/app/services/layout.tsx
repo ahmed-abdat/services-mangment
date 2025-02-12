@@ -23,6 +23,8 @@ export default function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  
   return (
     <main className="mb-6">
       <section className="mx-auto px-4 max-w-[1024px]" dir="ltr">

@@ -228,9 +228,7 @@ export default function UploadAccounts({
                     {...field}
                   />
                 </FormControl>
-                <FormDescription>
-                  Format: 42049074
-                </FormDescription>
+                <FormDescription>Format: 42049074</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
