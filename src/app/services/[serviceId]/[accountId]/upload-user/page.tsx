@@ -33,9 +33,10 @@ export default async function UploadUserPage({
   const accountName = accountSuccess && account ? account.name : "";
 
   // Fetch user data if editing (server-side)
+  // Let Supabase handle UUID validation naturally
   let userData: TUserTable | null = null;
 
-  if (userId && typeof userId === "string" && userId.length > 10) {
+  if (userId && typeof userId === "string") {
     try {
       const { user, success: userSuccess } = await getAccountUser(
         serviceId,

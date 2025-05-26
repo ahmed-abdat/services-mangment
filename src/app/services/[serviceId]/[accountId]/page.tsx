@@ -5,6 +5,7 @@ import UsersHeader from "@/features/dashboard/components/users/UsersHeader";
 import UsersTabel from "@/features/dashboard/components/users/UserTabel";
 import { formatUserForClient } from "@/lib/utils/format";
 import { TUserTable } from "@/types/services/user";
+import { ServiceAccount } from "@/types/services/service-accounts";
 import { Suspense } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +40,7 @@ function ErrorDisplay({ message }: { message: string }) {
 }
 
 // Personal Account Info Component
-function PersonalAccountInfo({ account }: { account: any }) {
+function PersonalAccountInfo({ account }: { account: ServiceAccount }) {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Not set";
     return new Intl.DateTimeFormat("en-US", {

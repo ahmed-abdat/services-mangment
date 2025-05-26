@@ -3,6 +3,8 @@
  * Provides helper functions for handling thumbnail operations in Supabase Storage
  */
 
+import { validateImageFile } from "./validation";
+
 /**
  * Extract the storage path from a Supabase Storage public URL
  * @param thumbnailUrl - The public URL of the thumbnail
@@ -47,27 +49,8 @@ export function validateThumbnailFile(file: File): {
   isValid: boolean;
   error?: string;
 } {
-  // Validate file type
-  const fileExt = file.name.split(".").pop()?.toLowerCase();
-  const validTypes = ["jpg", "jpeg", "png", "webp"];
-
-  if (!fileExt || !validTypes.includes(fileExt)) {
-    return {
-      isValid: false,
-      error: "Invalid file type. Only JPG, JPEG, PNG and WebP are allowed.",
-    };
-  }
-
-  // Validate file size (5MB limit)
-  const maxSize = 5 * 1024 * 1024; // 5MB
-  if (file.size > maxSize) {
-    return {
-      isValid: false,
-      error: "File size too large. Maximum size is 5MB.",
-    };
-  }
-
-  return { isValid: true };
+  // Use centralized validation with thumbnail-specific constraints
+  return validateImageFile(file, THUMBNAIL_CONFIG.MAX_SIZE_MB);
 }
 
 /**
@@ -123,6 +106,7 @@ export function createThumbnailFromUrl(
 export const THUMBNAIL_CONFIG = {
   BUCKET_NAME: "service_thumbnails",
   MAX_SIZE: 5 * 1024 * 1024, // 5MB
+  MAX_SIZE_MB: 5, // 5MB for validation utility
   ALLOWED_TYPES: ["jpg", "jpeg", "png", "webp"],
   CACHE_CONTROL: "3600",
 } as const;

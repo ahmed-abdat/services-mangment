@@ -41,6 +41,7 @@ interface AccountFormProps {
   serviceName: string;
   accountId?: string;
   initialData?: ServiceAccount;
+  fetchError?: string | null;
 }
 
 export default function AccountForm({
@@ -48,6 +49,7 @@ export default function AccountForm({
   serviceName,
   accountId,
   initialData,
+  fetchError,
 }: AccountFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
@@ -198,8 +200,23 @@ export default function AccountForm({
   return (
     <section className="mx-auto sm:flex mt-8 sm:flex-col md:px-8">
       <h1 className="text-2xl font-semibold tracking-tight text-center">
-        {accountId ? "Update" : "Create New"} {serviceName} Service Account
+        {accountId ? "Update" : "Create New"} Account for {serviceName}
       </h1>
+      <p className="text-muted-foreground mt-2 text-center">
+        Fill out the form below to {accountId ? "update the" : "create a new"}{" "}
+        account.
+      </p>
+
+      {/* Display fetch error if there is one */}
+      {fetchError && (
+        <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+          <p className="text-sm text-destructive font-medium">
+            Error loading account data
+          </p>
+          <p className="text-sm text-destructive/80 mt-1">{fetchError}</p>
+        </div>
+      )}
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField

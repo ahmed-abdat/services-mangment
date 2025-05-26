@@ -2,6 +2,7 @@ import { getService } from "@/features/dashboard/actions/services";
 import { getServiceAccount } from "@/features/dashboard/actions/service-accounts";
 import AccountForm from "@/features/dashboard/components/accounts/AccountForm";
 import { ServiceAccount } from "@/types/services/service-accounts";
+import { notFound } from "next/navigation";
 
 /**
  * Upload Accounts Page
@@ -19,16 +20,24 @@ export default async function UploadAccountsPage({
 }: UploadAccountsPageProps) {
   const accountId = searchParams?.accountId as string;
 
-  // Fetch service name on the server
+  // Fetch service and handle not found case explicitly
   const { service, success: serviceSuccess } = await getService(
     params.serviceId
   );
-  const serviceName = serviceSuccess && service ? service.name : "";
+
+  // If service is not found, redirect to 404 page
+  if (!serviceSuccess || !service) {
+    notFound();
+  }
+
+  const serviceName = service.name;
 
   // Fetch account data if editing (server-side)
+  // Let Supabase handle UUID validation naturally
   let accountData: ServiceAccount | undefined = undefined;
+  let accountFetchError: string | null = null;
 
-  if (accountId && typeof accountId === "string" && accountId.length > 10) {
+  if (accountId && typeof accountId === "string") {
     try {
       const { account, success: accountSuccess } = await getServiceAccount(
         params.serviceId,
@@ -36,10 +45,15 @@ export default async function UploadAccountsPage({
       );
       if (accountSuccess && account) {
         accountData = account;
+      } else {
+        accountFetchError = "Account not found or access denied";
       }
     } catch (error) {
       console.error("Error fetching account details:", error);
-      // Continue without account data for graceful degradation
+      accountFetchError =
+        error instanceof Error
+          ? `Failed to load account: ${error.message}`
+          : "Failed to load account details. Please try again.";
     }
   }
 
@@ -49,6 +63,7 @@ export default async function UploadAccountsPage({
       serviceName={serviceName}
       accountId={accountId}
       initialData={accountData}
+      fetchError={accountFetchError}
     />
   );
 }
