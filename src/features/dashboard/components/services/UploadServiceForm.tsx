@@ -17,6 +17,10 @@ import { uploadThumbnail } from "@/features/dashboard/actions/upload";
 import { FileUploader } from "@/components/ui/file-uploader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageIcon } from "lucide-react";
+import {
+  extractThumbnailStoragePath,
+  validateThumbnailFile,
+} from "@/lib/utils/thumbnail";
 
 export default function UploadServiceForm({
   name,
@@ -39,20 +43,6 @@ export default function UploadServiceForm({
 
   const router = useRouter();
 
-  // Helper function to extract storage path from thumbnail URL
-  const extractThumbnailStoragePath = (thumbnailUrl: string): string => {
-    const urlParts = thumbnailUrl.split("/");
-    const bucketIndex = urlParts.findIndex(
-      (part: string) => part === "service_thumbnails"
-    );
-    if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
-      // Extract the path after the bucket name (serviceId/filename)
-      return urlParts.slice(bucketIndex + 1).join("/");
-    }
-    // Fallback to filename extraction (less reliable)
-    return urlParts[urlParts.length - 1] || "";
-  };
-
   useEffect(() => {
     if (!name) {
       return;
@@ -68,9 +58,8 @@ export default function UploadServiceForm({
       // Store thumbnail information if it exists
       if (service.thumbnail_url) {
         setExistingThumbnailUrl(service.thumbnail_url);
-        setExistingThumbnailName(
-          extractThumbnailStoragePath(service.thumbnail_url)
-        );
+        const storagePath = extractThumbnailStoragePath(service.thumbnail_url);
+        setExistingThumbnailName(storagePath || "");
       }
 
       setServiceName(service?.name);
@@ -83,7 +72,7 @@ export default function UploadServiceForm({
           thumbnail: service.thumbnail_url
             ? {
                 url: service.thumbnail_url,
-                name: extractThumbnailStoragePath(service.thumbnail_url),
+                name: extractThumbnailStoragePath(service.thumbnail_url) || "",
               }
             : null,
         })
@@ -97,20 +86,12 @@ export default function UploadServiceForm({
   const handleThumbnailUpload = async (files: File[]) => {
     if (!files.length) return;
 
-    // Validate file type
+    // Validate file using utility function
     const file = files[0];
-    const fileExt = file.name.split(".").pop()?.toLowerCase();
-    const validTypes = ["jpg", "jpeg", "png", "webp"];
+    const validation = validateThumbnailFile(file);
 
-    if (!fileExt || !validTypes.includes(fileExt)) {
-      toast.error("Invalid file type. Only JPG, PNG and WebP are allowed.");
-      setThumbnailFiles([]);
-      return;
-    }
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size too large. Maximum size is 5MB.");
+    if (!validation.isValid) {
+      toast.error(validation.error || "Invalid file");
       setThumbnailFiles([]);
       return;
     }
@@ -203,19 +184,29 @@ export default function UploadServiceForm({
           // Start progress simulation
           const timer = startProgressSimulation(fileName);
 
-          // Upload the thumbnail using FormData
-          const result = await uploadThumbnailWithFormData(
-            localServiceData.id,
-            file,
-            localServiceData.thumbnail?.name
-          );
+          try {
+            // Upload the thumbnail using FormData
+            const result = await uploadThumbnailWithFormData(
+              localServiceData.id,
+              file,
+              localServiceData.thumbnail?.name
+            );
 
-          // Complete progress
-          clearInterval(timer);
-          completeProgress(fileName);
+            // Complete progress
+            clearInterval(timer);
+            completeProgress(fileName);
 
-          if (!result.success) {
-            throw new Error(result.error || "Failed to upload thumbnail");
+            if (!result.success) {
+              throw new Error(result.error || "Failed to upload thumbnail");
+            }
+
+            // Show success message if provided
+            if (result.message) {
+              toast.success(result.message);
+            }
+          } catch (error) {
+            clearInterval(timer);
+            throw error; // Re-throw to be caught by outer try-catch
           }
         }
 
@@ -245,18 +236,30 @@ export default function UploadServiceForm({
           // Start progress simulation
           const timer = startProgressSimulation(fileName);
 
-          // Upload the thumbnail using FormData
-          const uploadResult = await uploadThumbnailWithFormData(
-            result.serviceId,
-            file
-          );
+          try {
+            // Upload the thumbnail using FormData
+            const uploadResult = await uploadThumbnailWithFormData(
+              result.serviceId,
+              file
+            );
 
-          // Complete progress
-          clearInterval(timer);
-          completeProgress(fileName);
+            // Complete progress
+            clearInterval(timer);
+            completeProgress(fileName);
 
-          if (!uploadResult.success) {
-            throw new Error(uploadResult.error || "Failed to upload thumbnail");
+            if (!uploadResult.success) {
+              throw new Error(
+                uploadResult.error || "Failed to upload thumbnail"
+              );
+            }
+
+            // Show success message if provided
+            if (uploadResult.message) {
+              toast.success(uploadResult.message);
+            }
+          } catch (error) {
+            clearInterval(timer);
+            throw error; // Re-throw to be caught by outer try-catch
           }
         }
 

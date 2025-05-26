@@ -7,6 +7,8 @@ import { formatUserForClient } from "@/lib/utils/format";
 import { TUserTable } from "@/types/services/user";
 import { Suspense } from "react";
 import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { User, Phone, Calendar } from "lucide-react";
 
 interface PageProps {
   params: {
@@ -36,6 +38,74 @@ function ErrorDisplay({ message }: { message: string }) {
   );
 }
 
+// Personal Account Info Component
+function PersonalAccountInfo({ account }: { account: any }) {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Not set";
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(new Date(dateString));
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <User className="w-5 h-5" />
+          Personal Account Information
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center gap-3">
+            <User className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">Full Name</p>
+              <p className="font-medium">
+                {account.user_full_name || "Not provided"}
+              </p>
+            </div>
+          </div>
+
+          {account.user_phone_number && (
+            <div className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Phone Number</p>
+                <p className="font-medium">{account.user_phone_number}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Subscription Start
+              </p>
+              <p className="font-medium">
+                {formatDate(account.account_starting_date)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <p className="text-sm text-muted-foreground">Subscription End</p>
+              <p className="font-medium">
+                {formatDate(account.account_ending_date)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function ServiceAccountPage({
   params,
   searchParams,
@@ -43,15 +113,35 @@ export default async function ServiceAccountPage({
   const { serviceId, accountId } = params;
 
   try {
-    // Fetch account details and users in parallel
-    const [accountResponse, usersResponse] = await Promise.all([
-      getServiceAccount(serviceId, accountId),
-      getAccountUsers(serviceId, accountId),
-    ]);
+    // Fetch account details first
+    const accountResponse = await getServiceAccount(serviceId, accountId);
 
     if (!accountResponse.success || !accountResponse.account) {
       return <ErrorDisplay message="Error loading account details" />;
     }
+
+    const account = accountResponse.account;
+
+    // Handle personal accounts (show user info directly from account)
+    if (account.account_type === "personal") {
+      return (
+        <section className="space-y-6">
+          <Suspense fallback={<div>Loading header...</div>}>
+            <UsersHeader
+              serviceId={serviceId}
+              accountId={accountId}
+              accountName={account.name}
+              accountType="personal"
+            />
+          </Suspense>
+
+          <PersonalAccountInfo account={account} />
+        </section>
+      );
+    }
+
+    // Handle shared accounts (show users table)
+    const usersResponse = await getAccountUsers(serviceId, accountId);
 
     if (!usersResponse.success || !usersResponse.users) {
       return <ErrorDisplay message="Error loading users" />;
@@ -68,13 +158,14 @@ export default async function ServiceAccountPage({
           <UsersHeader
             serviceId={serviceId}
             accountId={accountId}
-            accountName={accountResponse.account.name}
+            accountName={account.name}
+            accountType="shared"
           />
         </Suspense>
 
         <Suspense fallback={<LoadingTable />}>
           {formattedUsers.length === 0 ? (
-            <NoServicesFound serviceId={serviceId} />
+            <NoServicesFound serviceId={serviceId} accountId={accountId} />
           ) : (
             <UsersTabel users={formattedUsers} params={params} />
           )}

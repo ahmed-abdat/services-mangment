@@ -112,7 +112,6 @@ export async function getServices() {
 
     if (error) throw error;
 
-
     return { success: true, services };
   } catch (error) {
     console.error("Error getting services:", error);
@@ -133,7 +132,6 @@ export async function getService(id: string) {
       .eq("id", id)
       .single();
 
-
     if (error) throw error;
 
     return { success: true, service };
@@ -143,35 +141,98 @@ export async function getService(id: string) {
   }
 }
 
-// Delete service
+// Delete service with best practices for error handling and cleanup
 export async function deleteService(id: string, thumbnail: Thumbnail | null) {
   const supabase = await createClient();
 
   try {
-    // Delete thumbnail from storage if exists
-    if (thumbnail?.name) {
-      const { error: storageError } = await supabase.storage
-        .from("service_thumbnails")
-        .remove([thumbnail.name]); // Use the full path stored in name
+    // Step 1: Validate input parameters early
+    if (!id) {
+      return {
+        success: false,
+        error: "Service ID is required for deletion",
+      };
+    }
 
-      if (storageError) {
-        console.error("Error deleting thumbnail:", storageError);
-        throw storageError;
+    // Step 2: Check if service exists before attempting deletion
+    const { data: existingService, error: checkError } = await supabase
+      .from("services")
+      .select("id, thumbnail_url")
+      .eq("id", id)
+      .single();
+
+    if (checkError) {
+      if (checkError.code === "PGRST116") {
+        // Service not found
+        return {
+          success: false,
+          error: "Service not found",
+        };
+      }
+      console.error("Error checking service existence:", checkError);
+      return {
+        success: false,
+        error: "Failed to verify service existence",
+      };
+    }
+
+    // Step 3: Delete the service from the database first
+    // This ensures we check permissions and existence before cleaning up storage
+    const { error: deleteError } = await supabase
+      .from("services")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      console.error("Error deleting service from database:", deleteError);
+      return {
+        success: false,
+        error: `Failed to delete service: ${deleteError.message}`,
+      };
+    }
+
+    // Step 4: Clean up thumbnail from storage if service deletion was successful
+    // This prevents orphaned database entries if storage deletion fails
+    if (thumbnail?.name) {
+      try {
+        const { error: storageError } = await supabase.storage
+          .from("service_thumbnails")
+          .remove([thumbnail.name]);
+
+        if (storageError) {
+          console.error("Error deleting thumbnail from storage:", storageError);
+          // Don't fail the entire operation since service is already deleted
+          // Log the warning but continue, as the main operation succeeded
+          console.warn(
+            `Service deleted successfully but failed to clean up thumbnail: ${thumbnail.name}. Error: ${storageError.message}`
+          );
+        } else {
+          console.log(`Successfully deleted thumbnail: ${thumbnail.name}`);
+        }
+      } catch (storageError) {
+        console.error(
+          "Unexpected error during thumbnail cleanup:",
+          storageError
+        );
+        // Don't throw - service deletion was successful, storage cleanup is secondary
       }
     }
 
-    // Delete all related accounts and users (cascade delete should handle this)
-    const { error } = await supabase.from("services").delete().eq("id", id);
-
-    if (error) throw error;
-
+    // Step 5: Revalidate the cache after successful deletion
     revalidatePath("/services");
-    return { success: true };
+
+    return {
+      success: true,
+      message: "Service deleted successfully",
+    };
   } catch (error) {
-    console.error("Error deleting service:", error);
+    console.error("Unexpected error in deleteService:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
+      error:
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while deleting the service",
     };
   }
 }

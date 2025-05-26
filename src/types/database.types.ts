@@ -11,32 +11,49 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
-  
+          account_ending_date: string | null
+          account_starting_date: string | null
+          account_type: Database["public"]["Enums"]["account_type"]
           created_at: string | null
           details: string | null
           email: string
+          expires_at: string | null
           id: string
           name: string
           service_id: string | null
           thumbnail_url: string | null
+          user_full_name: string | null
+          user_phone_number: string | null
         }
         Insert: {
+          account_ending_date?: string | null
+          account_starting_date?: string | null
+          account_type?: Database["public"]["Enums"]["account_type"]
           created_at?: string | null
           details?: string | null
           email: string
+          expires_at?: string | null
           id?: string
           name: string
           service_id?: string | null
           thumbnail_url?: string | null
+          user_full_name?: string | null
+          user_phone_number?: string | null
         }
         Update: {
+          account_ending_date?: string | null
+          account_starting_date?: string | null
+          account_type?: Database["public"]["Enums"]["account_type"]
           created_at?: string | null
           details?: string | null
           email?: string
+          expires_at?: string | null
           id?: string
           name?: string
           service_id?: string | null
           thumbnail_url?: string | null
+          user_full_name?: string | null
+          user_phone_number?: string | null
         }
         Relationships: [
           {
@@ -169,7 +186,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      account_type: "personal" | "shared"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -284,6 +301,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_type: ["personal", "shared"],
+    },
   },
 } as const

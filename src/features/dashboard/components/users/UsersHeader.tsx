@@ -12,12 +12,14 @@ interface UsersHeaderProps {
   serviceId?: string;
   accountId?: string;
   accountName?: string;
+  accountType?: "personal" | "shared";
 }
 
 function UsersHeader({
   serviceId,
   accountId,
   accountName: initialAccountName,
+  accountType = "shared",
 }: UsersHeaderProps) {
   const router = useRouter();
   const [accountName, setAccountName] = React.useState<string>(
@@ -58,22 +60,26 @@ function UsersHeader({
     <div className="items-start justify-between py-4 border-b sm:flex mt-12">
       <div className="max-w-lg">
         <h1 className="text-zinc-800 text-2xl font-semibold">
-          {accountName} Users
+          {accountName} {accountType === "personal" ? "Account" : "Users"}
         </h1>
         <p className="text-zinc-600 mt-2 text-sm">
-          Create and manage your users easily and quickly.
+          {accountType === "personal"
+            ? "View your personal account information."
+            : "Create and manage your users easily and quickly."}
         </p>
       </div>
-      <Link href={uploadservesurl} className="mt-4 md:mt-0">
-        <Button
-          variant="default"
-          size="sm"
-          className="w-full sm:w-auto gap-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          New User
-        </Button>
-      </Link>
+      {accountType === "shared" && (
+        <Link href={uploadservesurl} className="mt-4 md:mt-0">
+          <Button
+            variant="default"
+            size="sm"
+            className="w-full sm:w-auto gap-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            New User
+          </Button>
+        </Link>
+      )}
     </div>
   );
 }

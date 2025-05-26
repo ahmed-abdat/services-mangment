@@ -25,6 +25,7 @@ import {
   getServiceAccount,
 } from "@/features/dashboard/actions/service-accounts";
 import { ServiceAccount } from "@/types/services/service-accounts";
+import { createThumbnailFromUrl } from "@/lib/utils/thumbnail";
 
 interface DeleteModalSearchParams {
   serviceName?: string;
@@ -52,77 +53,82 @@ export function DeleteModal({
   };
 
   const handleDeleteService = async () => {
-    setLoading(true);
-
-    // Validate service and required properties exist
+    // Validate service and required properties exist early
     if (!service?.name || !service.id) {
       toast.error("Service information is missing");
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
+
     try {
-      // Convert string thumbnail_url to Thumbnail type
-      const thumbnail = service.thumbnail_url
-        ? {
-            url: service.thumbnail_url,
-            name: service.thumbnail_url.includes("/")
-              ? service.thumbnail_url.split("/").pop() || ""
-              : "",
-          }
-        : null;
+      // Extract thumbnail storage path properly using utility function
+      const thumbnail = createThumbnailFromUrl(service.thumbnail_url);
 
       const result = await deleteService(service.id, thumbnail);
 
       if (result.success) {
-        toast.success(`Service "${service.name}" deleted successfully`);
-        router.refresh();
-        setLoading(false);
+        // Show success message with custom message if provided
+        const successMessage =
+          result.message || `Service "${service.name}" deleted successfully`;
+        toast.success(successMessage);
+
+        // Close modal and refresh data
         handleClose();
+        router.refresh();
       } else {
-        throw new Error(result.error || "Failed to delete service");
+        // Handle expected errors from the service
+        const errorMessage = result.error || "Failed to delete service";
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Error deleting service:", error);
-      setLoading(false);
-      toast.error(
+      // Handle unexpected errors (network issues, etc.)
+      console.error("Unexpected error deleting service:", error);
+      const errorMessage =
         error instanceof Error
-          ? `Error deleting service: ${error.message}`
-          : "An unexpected error occurred while deleting the service"
-      );
+          ? `Unexpected error: ${error.message}`
+          : "An unexpected error occurred while deleting the service";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    setLoading(true);
-
-    // Validate account and required properties exist
+    // Validate account and required properties exist early
     if (!account?.name || !accountId) {
       toast.error("Account information is missing");
-      setLoading(false);
       return;
     }
 
-    try {
-      const { success } = await deleteServiceAccount(serviceName, accountId);
+    setLoading(true);
 
-      if (success) {
-        toast.success(`Account "${account.name}" deleted successfully`);
-        router.refresh();
-        setLoading(false);
+    try {
+      const result = await deleteServiceAccount(serviceName, accountId);
+
+      if (result.success) {
+        // Show success message
+        const successMessage = `Account "${account.name}" deleted successfully`;
+        toast.success(successMessage);
+
+        // Close modal and refresh data
         handleClose();
-        return;
+        router.refresh();
       } else {
-        throw new Error("Failed to delete account");
+        // Handle expected errors from the service
+        const errorMessage = result.error || "Failed to delete account";
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Error deleting account:", error);
-      setLoading(false);
-      toast.error(
+      // Handle unexpected errors (network issues, etc.)
+      console.error("Unexpected error deleting account:", error);
+      const errorMessage =
         error instanceof Error
-          ? `Error deleting account: ${error.message}`
-          : "An unexpected error occurred while deleting the account"
-      );
+          ? `Unexpected error: ${error.message}`
+          : "An unexpected error occurred while deleting the account";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {

@@ -25,8 +25,14 @@ export interface Thumbnail {
 export interface ServiceAccount {
   id: string;
   name: string;
+  email: string;
   thumbnail: Thumbnail | null;
   details?: string | null;
+  expires_at?: string | null;
+  account_type: "personal" | "shared";
+  // Personal user fields (only for personal accounts)
+  user_full_name?: string | null;
+  user_phone_number?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

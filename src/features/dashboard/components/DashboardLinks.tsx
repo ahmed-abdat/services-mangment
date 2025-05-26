@@ -25,15 +25,25 @@ export default function DashboardLinks() {
         const serviceId = pathNames[1];
         const accountId = pathNames[2];
 
+        // Skip fetching account for known route segments that aren't account IDs
+        const isRouteSegment = [
+          "upload-accounts",
+          "upload-servers",
+          "upload-user",
+        ].includes(accountId);
+
         const serviceResult = await getService(serviceId);
-        const accountResult = await getServiceAccount(serviceId, accountId);
 
         if (serviceResult.success && serviceResult.service) {
           setServiceName(serviceResult.service.name || null);
         }
 
-        if (accountResult.success && accountResult.account) {
-          setAccountName(accountResult.account.name || null);
+        // Only fetch account if it's not a route segment
+        if (!isRouteSegment) {
+          const accountResult = await getServiceAccount(serviceId, accountId);
+          if (accountResult.success && accountResult.account) {
+            setAccountName(accountResult.account.name || null);
+          }
         }
       }
     };

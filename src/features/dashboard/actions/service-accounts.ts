@@ -6,7 +6,7 @@ import {
   ServiceAccount,
   ServiceAccountsInsert,
 } from "../types/dashboard.types";
-import { TAccountsService } from "@/lib/validations/service-accounts/accounts-services";
+import { TAccountsService } from "../validations/accounts";
 
 // Add new service account
 export async function addServiceAccount(
@@ -28,21 +28,30 @@ export async function addServiceAccount(
       name: account.name,
       email: account.email, // Use the email field from the form
       details: account.details || null,
+      expires_at: account.expires_at || null,
+      account_type: account.account_type || "shared",
+      // Personal user fields (only for personal accounts)
+      user_full_name: account.user_full_name || null,
+      user_phone_number: account.user_phone_number || null,
+      account_starting_date: account.account_starting_date || null,
+      account_ending_date: account.account_ending_date || null,
       created_at: new Date().toISOString(),
       thumbnail_url: service?.thumbnail_url || null,
     };
 
-    const { error } = await supabase
+    const { data: insertedAccount, error } = await supabase
       .from("accounts")
-      .insert(newAccount);
+      .insert(newAccount)
+      .select("id")
+      .single();
 
     if (error) throw error;
 
     revalidatePath(`/services/${serviceId}`);
-    return { success: true };
+    return { success: true, accountId: insertedAccount?.id };
   } catch (error) {
     console.error("Error adding service account:", error);
-    return { success: false };
+    return { success: false, accountId: null };
   }
 }
 
@@ -136,7 +145,13 @@ export async function updateServiceAccount(
         name: account.name,
         email: account.email,
         details: account.details || null,
-        updated_at: new Date().toISOString(),
+        expires_at: account.expires_at || null,
+        account_type: account.account_type || "shared",
+        // Personal user fields (only for personal accounts)
+        user_full_name: account.user_full_name || null,
+        user_phone_number: account.user_phone_number || null,
+        account_starting_date: account.account_starting_date || null,
+        account_ending_date: account.account_ending_date || null,
       })
       .eq("id", accountId)
       .eq("service_id", serviceId);
@@ -151,7 +166,7 @@ export async function updateServiceAccount(
   }
 }
 
-// Delete service account
+// Delete service account with best practices for error handling
 export async function deleteServiceAccount(
   serviceId: string,
   accountId: string
@@ -159,19 +174,75 @@ export async function deleteServiceAccount(
   const supabase = await createClient();
 
   try {
-    // Delete the account (cascade delete should handle related users)
-    const { error } = await supabase
+    // Step 1: Validate input parameters early
+    if (!serviceId) {
+      return {
+        success: false,
+        error: "Service ID is required for account deletion",
+      };
+    }
+
+    if (!accountId) {
+      return {
+        success: false,
+        error: "Account ID is required for deletion",
+      };
+    }
+
+    // Step 2: Check if account exists before attempting deletion
+    const { data: existingAccount, error: checkError } = await supabase
+      .from("accounts")
+      .select("id, name")
+      .eq("id", accountId)
+      .eq("service_id", serviceId)
+      .single();
+
+    if (checkError) {
+      if (checkError.code === "PGRST116") {
+        // Account not found
+        return {
+          success: false,
+          error: "Account not found",
+        };
+      }
+      console.error("Error checking account existence:", checkError);
+      return {
+        success: false,
+        error: "Failed to verify account existence",
+      };
+    }
+
+    // Step 3: Delete the account from the database
+    // Note: Cascade delete should handle related users automatically
+    const { error: deleteError } = await supabase
       .from("accounts")
       .delete()
       .eq("id", accountId)
       .eq("service_id", serviceId);
 
-    if (error) throw error;
+    if (deleteError) {
+      console.error("Error deleting account from database:", deleteError);
+      return {
+        success: false,
+        error: `Failed to delete account: ${deleteError.message}`,
+      };
+    }
 
+    // Step 4: Revalidate the cache after successful deletion
     revalidatePath(`/services/${serviceId}`);
-    return { success: true };
+
+    return {
+      success: true,
+      message: `Account "${existingAccount.name}" deleted successfully`,
+    };
   } catch (error) {
-    console.error("Error deleting service account:", error);
-    return { success: false };
+    console.error("Unexpected error in deleteServiceAccount:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while deleting the account",
+    };
   }
 }

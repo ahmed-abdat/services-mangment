@@ -9,6 +9,8 @@ import {
   User,
   Calendar,
   Mail,
+  Clock,
+  Users,
 } from "lucide-react";
 import { ServiceAccount } from "@/types/services/service-accounts";
 import { mainRoute } from "@/lib/mainroute";
@@ -20,6 +22,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { getAccountUsers } from "@/features/dashboard/actions/service-users";
 
 // Helper function to format date
 const formatDate = (dateString: string | null) => {
@@ -31,6 +35,20 @@ const formatDate = (dateString: string | null) => {
   }).format(new Date(dateString));
 };
 
+// Helper function to check if account is expired or expiring soon
+const getExpirationStatus = (expiresAt: string | null) => {
+  if (!expiresAt) return null;
+
+  const today = new Date();
+  const expiration = new Date(expiresAt);
+  const diffTime = expiration.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return { status: "expired", days: Math.abs(diffDays) };
+  if (diffDays <= 7) return { status: "expiring", days: diffDays };
+  return { status: "active", days: diffDays };
+};
+
 export default function AccountCard({
   account,
   serviceId,
@@ -38,6 +56,36 @@ export default function AccountCard({
   account: ServiceAccount;
   serviceId: string;
 }) {
+  const [userCount, setUserCount] = useState<number>(0);
+  const [isLoadingCount, setIsLoadingCount] = useState(true);
+
+  // Fetch user count for shared accounts
+  useEffect(() => {
+    const fetchUserCount = async () => {
+      if (account.account_type === "personal") {
+        setUserCount(1); // Personal accounts always have 1 user
+        setIsLoadingCount(false);
+      } else {
+        try {
+          const { success, users } = await getAccountUsers(
+            serviceId,
+            account.id
+          );
+          setUserCount(success ? users.length : 0);
+        } catch (error) {
+          console.error("Error fetching user count:", error);
+          setUserCount(0);
+        } finally {
+          setIsLoadingCount(false);
+        }
+      }
+    };
+
+    if (account && serviceId) {
+      fetchUserCount();
+    }
+  }, [account, serviceId]);
+
   // Create URLs for delete and update actions
   const getUrls = () => {
     const url = new URL(`${mainRoute}/services/${serviceId}`);
@@ -54,6 +102,7 @@ export default function AccountCard({
   };
 
   const { url, updateUrl } = getUrls();
+  const expirationStatus = getExpirationStatus(account.expires_at);
 
   if (!account || !serviceId) {
     return (
@@ -79,15 +128,58 @@ export default function AccountCard({
           />
         </Link>
 
-        {/* Status badge */}
-        <div className="absolute top-3 left-3">
+        {/* Status badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1">
+          {/* Account type badge */}
           <Badge
             variant="secondary"
             className="bg-background/80 backdrop-blur-sm"
           >
-            <User className="w-3 h-3 mr-1" />
-            Active
+            {account.account_type === "personal" ? (
+              <User className="w-3 h-3 mr-1" />
+            ) : (
+              <Users className="w-3 h-3 mr-1" />
+            )}
+            {account.account_type === "personal" ? "Personal" : "Shared"}
           </Badge>
+
+          {/* User count badge */}
+          <Badge
+            variant="outline"
+            className="bg-background/80 backdrop-blur-sm"
+          >
+            <Users className="w-3 h-3 mr-1" />
+            {isLoadingCount
+              ? "..."
+              : `${userCount} User${userCount !== 1 ? "s" : ""}`}
+          </Badge>
+
+          {/* Expiration status badge */}
+          {expirationStatus && (
+            <Badge
+              variant={
+                expirationStatus.status === "expired"
+                  ? "destructive"
+                  : expirationStatus.status === "expiring"
+                  ? "destructive"
+                  : "default"
+              }
+              className={
+                expirationStatus.status === "expired"
+                  ? "bg-red-500/90 text-white backdrop-blur-sm"
+                  : expirationStatus.status === "expiring"
+                  ? "bg-orange-500/90 text-white backdrop-blur-sm"
+                  : "bg-green-500/90 text-white backdrop-blur-sm"
+              }
+            >
+              <Clock className="w-3 h-3 mr-1" />
+              {expirationStatus.status === "expired"
+                ? `Expired ${expirationStatus.days}d ago`
+                : expirationStatus.status === "expiring"
+                ? `${expirationStatus.days}d left`
+                : `${expirationStatus.days}d left`}
+            </Badge>
+          )}
         </div>
 
         {/* Quick link */}
@@ -127,6 +219,12 @@ export default function AccountCard({
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 <span>Created {formatDate(account.created_at)}</span>
+              </div>
+            )}
+            {account.expires_at && (
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span>Expires {formatDate(account.expires_at)}</span>
               </div>
             )}
           </div>
