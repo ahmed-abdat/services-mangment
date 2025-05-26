@@ -70,7 +70,7 @@ function UsersTable({ users, params }: UsersTableProps) {
       description: false,
       starting_date: true,
       ending_date: true,
-      reminderDays: true, // Now represents duration
+      subscriptionDuration: true, // Total subscription duration in days
       subscription_status: true,
       actions: true,
     });
@@ -197,7 +197,7 @@ function UsersTable({ users, params }: UsersTableProps) {
         enableSorting: false,
       },
       {
-        accessorKey: "reminderDays",
+        accessorKey: "subscriptionDuration",
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -207,7 +207,9 @@ function UsersTable({ users, params }: UsersTableProps) {
             <CaretSortIcon className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => <div>{row.getValue("reminderDays")} days</div>,
+        cell: ({ row }) => (
+          <div>{row.getValue("subscriptionDuration")} days</div>
+        ),
         sortingFn: "basic",
         enableSorting: true,
       },

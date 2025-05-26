@@ -245,7 +245,11 @@ export default function UploadAccounts({
           />
           <div className="flex flex-col gap-y-4 w-full">
             <UserStartingDate date={startingDate} setDate={setStartingDate} />
-            <UserEndingDate date={endingDate} setDate={setEndingDate} />
+            <UserEndingDate
+              date={endingDate}
+              setDate={setEndingDate}
+              startingDate={startingDate}
+            />
           </div>
           <FormField
             control={form.control}

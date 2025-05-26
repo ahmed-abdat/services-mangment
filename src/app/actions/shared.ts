@@ -8,9 +8,9 @@ export type ActionResponse<T> = {
   error?: string;
 };
 
-// Calculate subscription duration between start and end dates (renamed from calculateReminderDays)
-// This now represents the total duration of the subscription, not remaining days
-export const calculateReminderDays = (
+// Calculate subscription duration between start and end dates
+// This represents the total duration of the subscription in days
+export const calculateSubscriptionDuration = (
   starting_date: string | null,
   ending_date: string | null
 ): number => {

@@ -12,7 +12,7 @@ export function formatUserForClient(
       description: "",
       starting_date: null,
       ending_date: null,
-      reminderDays: 0,
+      subscriptionDuration: 0,
       subscription_status: "Expired",
     };
   }

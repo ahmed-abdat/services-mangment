@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+  
           created_at: string | null
           details: string | null
           email: string

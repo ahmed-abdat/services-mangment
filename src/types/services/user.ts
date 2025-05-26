@@ -3,6 +3,13 @@ export type TUserDate = {
   setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
 };
 
+// Extended type for UserEndingDate that includes startingDate for relative calculations
+export type TUserEndingDate = {
+  date: Date | undefined;
+  setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
+  startingDate?: Date | undefined; // Optional starting date for relative calculations
+};
+
 export type TUserData = {
   id?: string;
   full_name: string;
@@ -20,7 +27,7 @@ export type TUserDatabase = {
   phone_number?: string;
   starting_date: string;
   ending_date: string;
-  reminderDays: number; // Duration between start and end dates in days
+  subscriptionDuration: number; // Total duration between start and end dates in days
   subscription_status?: string;
 };
 
@@ -32,7 +39,7 @@ export type TUserTable = {
   phone_number?: string;
   starting_date: string | null;
   ending_date: string | null;
-  reminderDays: number; // Duration between start and end dates in days
+  subscriptionDuration: number; // Total duration between start and end dates in days
   subscription_status?: string;
 };
 

@@ -31,19 +31,7 @@ function calculateRemainingDays(ending_date: string): number {
   return end.diff(now, "days") + 1;
 }
 
-// Legacy function for backward compatibility - now returns subscription duration
-function calculateReminderDays(ending_date: string): number {
-  // For now, we'll keep the old behavior but this should be updated
-  // to use calculateSubscriptionDuration once we have access to starting_date
-  const now = moment().startOf("day");
-  const end = moment(ending_date).endOf("day");
-
-  if (now.isAfter(end)) {
-    return 0;
-  }
-
-  return end.diff(now, "days") + 1;
-}
+// This function is removed - use calculateSubscriptionDuration or calculateRemainingDays instead
 
 // Add new account user
 export async function addAccountUser(
@@ -101,13 +89,13 @@ export async function getAccountUser(
 
     if (user) {
       // Calculate subscription duration between start and end dates
-      const reminderDays = calculateSubscriptionDuration(
+      const subscriptionDuration = calculateSubscriptionDuration(
         user.starting_date,
         user.ending_date
       );
       return {
         success: true,
-        user: { ...user, reminderDays },
+        user: { ...user, subscriptionDuration },
         error: null,
       };
     }
@@ -131,12 +119,15 @@ export async function getAccountUsers(serviceId: string, accountId: string) {
 
     if (error) throw error;
 
-    const usersWithReminder = users.map((user) => ({
+    const usersWithDuration = users.map((user) => ({
       ...user,
-      reminderDays: calculateSubscriptionDuration(user.starting_date, user.ending_date),
+      subscriptionDuration: calculateSubscriptionDuration(
+        user.starting_date,
+        user.ending_date
+      ),
     }));
 
-    return { success: true, users: usersWithReminder };
+    return { success: true, users: usersWithDuration };
   } catch (error) {
     console.error("Error getting users:", error);
     return { success: false, users: [] };
