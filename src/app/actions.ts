@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import type { UserResponse } from "@/types/user.types";
 
-export async function isUserExist(email: string): Promise<UserResponse> {
+export async function isUserExist(email: string): Promise<UserResponse | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("auth_users")
@@ -301,7 +301,9 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function getUserProfile(userId: string): Promise<UserResponse> {
+export async function getUserProfile(
+  userId: string
+): Promise<UserResponse | null> {
   const supabase = await createClient();
 
   try {

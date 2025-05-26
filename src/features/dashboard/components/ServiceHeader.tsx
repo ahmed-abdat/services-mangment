@@ -4,11 +4,11 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getService } from "@/app/action";
+import { getService } from "@/features/dashboard/actions/services";
 import { Button } from "@/components/ui/button";
 
 export default function ServiceHeader({ serviceId }: { serviceId?: string }) {
-  const uploadservesurl = serviceId
+  const uploadServicesUrl = serviceId
     ? `/services/${serviceId}/upload-accounts`
     : "/services/upload-servers";
   const router = useRouter();
@@ -19,11 +19,17 @@ export default function ServiceHeader({ serviceId }: { serviceId?: string }) {
       return;
     }
     const fetchServiceName = async () => {
-      const { service, success } = await getService(serviceId);
-      if (!success || !service) {
-        return;
+      try {
+        const { service, success } = await getService(serviceId);
+        if (!success || !service) {
+          console.error("Failed to fetch service or service not found");
+          return;
+        }
+        setServiceName(service.name);
+      } catch (error) {
+        console.error("Error fetching service name:", error);
+        // Optionally set a fallback service name or show error state
       }
-      setServiceName(service.name);
     };
     fetchServiceName();
   }, [serviceId]);
@@ -39,7 +45,7 @@ export default function ServiceHeader({ serviceId }: { serviceId?: string }) {
           and quickly.
         </p>
       </div>
-      <Link href={uploadservesurl} className="mt-4 md:mt-0">
+      <Link href={uploadServicesUrl} className="mt-4 md:mt-0">
         <Button
           variant="default"
           size="sm"

@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-// import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,10 +18,12 @@ import { useEffect, useState } from "react";
 import { Service } from "@/types/upload-serves";
 import {
   deleteService,
-  deleteServiceAccount,
   getService,
+} from "@/features/dashboard/actions/services";
+import {
+  deleteServiceAccount,
   getServiceAccount,
-} from "@/app/action";
+} from "@/features/dashboard/actions/service-accounts";
 import { ServiceAccount } from "@/types/services/service-accounts";
 
 interface DeleteModalSearchParams {
@@ -36,9 +37,9 @@ export function DeleteModal({
 }: {
   searchParams: DeleteModalSearchParams;
 }) {
-  const serviceName = searchParams?.serviceName as string;
-  const isModalOpen = searchParams?.openModal == "true" ? true : false;
-  const accountId = searchParams?.accountId as string;
+  const serviceName = searchParams?.serviceName || "";
+  const isModalOpen = searchParams?.openModal === "true";
+  const accountId = searchParams?.accountId || "";
 
   const [service, setService] = useState<Service | null>(null);
   const [account, setAccount] = useState<ServiceAccount | null>(null);
@@ -65,19 +66,19 @@ export function DeleteModal({
       const thumbnail = service.thumbnail_url
         ? {
             url: service.thumbnail_url,
-            name: service.thumbnail_url.split("/").pop() || "",
+            name: service.thumbnail_url.includes("/")
+              ? service.thumbnail_url.split("/").pop() || ""
+              : "",
           }
         : null;
 
       const result = await deleteService(service.id, thumbnail);
 
       if (result.success) {
-        setTimeout(() => {
-          toast.success(`Service "${service.name}" deleted successfully`);
-          router.refresh();
-          setLoading(false);
-          handleClose();
-        }, 1500);
+        toast.success(`Service "${service.name}" deleted successfully`);
+        router.refresh();
+        setLoading(false);
+        handleClose();
       } else {
         throw new Error(result.error || "Failed to delete service");
       }
@@ -106,12 +107,10 @@ export function DeleteModal({
       const { success } = await deleteServiceAccount(serviceName, accountId);
 
       if (success) {
-        setTimeout(() => {
-          toast.success(`Account "${account.name}" deleted successfully`);
-          router.refresh();
-          setLoading(false);
-          handleClose();
-        }, 2000);
+        toast.success(`Account "${account.name}" deleted successfully`);
+        router.refresh();
+        setLoading(false);
+        handleClose();
         return;
       } else {
         throw new Error("Failed to delete account");

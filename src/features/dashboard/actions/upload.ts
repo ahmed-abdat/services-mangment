@@ -27,7 +27,7 @@ export async function uploadThumbnail(formData: FormData) {
     if (!fileExt || !validTypes.includes(fileExt)) {
       return {
         success: false,
-        error: "Invalid file type. Only JPG, PNG and WebP are allowed.",
+        error: "Invalid file type. Only JPG, JPEG, PNG and WebP are allowed.",
       };
     }
 
@@ -46,11 +46,12 @@ export async function uploadThumbnail(formData: FormData) {
         .remove([oldThumbnailName]);
     }
 
-    // Create a unique filename
-    const fileName = `${serviceId}/${Date.now()}_${file.name.replace(
-      /[^a-zA-Z0-9.-]/g,
-      "_"
-    )}`;
+    // Create a unique filename with proper extension handling
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
+    const baseName =
+      file.name.substring(0, file.name.lastIndexOf(".")) || file.name;
+    const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const fileName = `${serviceId}/${Date.now()}_${sanitizedBaseName}.${fileExtension}`;
 
     // Upload the file
     const { error: uploadError } = await supabase.storage
@@ -78,6 +79,8 @@ export async function uploadThumbnail(formData: FormData) {
 
     if (updateError) {
       console.error("Error updating service with thumbnail:", updateError);
+      // Clean up uploaded file if database update fails
+      await supabase.storage.from("service_thumbnails").remove([fileName]);
       return { success: false, error: updateError.message };
     }
 
