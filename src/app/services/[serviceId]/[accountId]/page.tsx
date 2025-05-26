@@ -1,10 +1,10 @@
 import { getAccountUsers } from "@/app/action";
-import { getServiceAccount } from "@/app/actions/accounts";
-import NoServicesFound from "@/components/dashboard/NoServicesFound";
-import UsersHeader from "@/components/dashboard/users/UsersHeader";
-import UsersTabel from "@/components/dashboard/users/UserTabel";
+import { getServiceAccount } from "@/features/dashboard/actions/service-accounts";
+import NoServicesFound from "@/features/dashboard/components/NoServicesFound";
+import UsersHeader from "@/features/dashboard/components/users/UsersHeader";
+import UsersTabel from "@/features/dashboard/components/users/UserTabel";
 import { formatUserForClient } from "@/lib/utils/format";
-import { TUserTabel } from "@/types/services/user";
+import { TUserTable } from "@/types/services/user";
 import { Suspense } from "react";
 import { toast } from "sonner";
 
@@ -58,7 +58,7 @@ export default async function ServiceAccountPage({
     }
 
     // Format users data for client components and ensure no null values
-    const formattedUsers = usersResponse.users.map((user: TUserTabel) =>
+    const formattedUsers = usersResponse.users.map((user: TUserTable) =>
       formatUserForClient(user)
     );
 

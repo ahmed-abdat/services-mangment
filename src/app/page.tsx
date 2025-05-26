@@ -1,13 +1,10 @@
+import { redirect } from "next/navigation";
+import { getUser } from "./actions";
 
-import Login from '@/components/login'
-
-function page() {
-  
-
-
-  return (
-   <Login />
-  )
+export default async function Home() {
+  const user = await getUser();
+  if (user) {
+    redirect("/services");
+  }
+  redirect("/login");
 }
-
-export default page

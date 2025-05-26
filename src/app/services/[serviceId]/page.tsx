@@ -1,10 +1,10 @@
-import { getService } from "@/app/actions/services";
-import { getServiceAccounts } from "@/app/actions/accounts";
-import { DeleteModal } from "@/components/dashboard/DeleteModel";
-import NoServicesFound from "@/components/dashboard/NoServicesFound";
-import ServiceHeader from "@/components/dashboard/ServiceHeader";
-import AccountCard from "@/components/dashboard/AccountCard";
+import { getService } from "@/features/dashboard/actions/services";
+import { getServiceAccounts } from "@/features/dashboard/actions/service-accounts";
+import NoServicesFound from "@/features/dashboard/components/NoServicesFound";
+import ServiceHeader from "@/features/dashboard/components/ServiceHeader";
+import AccountCard from "@/features/dashboard/components/AccountCard";
 import { ServiceAccount } from "@/types/services/service-accounts";
+import { DeleteModal } from "@/features/dashboard";
 
 interface PosteProps {
   params: {

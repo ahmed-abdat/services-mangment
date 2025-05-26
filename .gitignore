@@ -6,8 +6,15 @@
 .pnp.js
 .yarn/install-state.gz
 
-
+# cursor
 .cursorrules
+.cursor/*
+
+
+# migrations 
+migration_to_supabase/*
+migrations/*
+
 
 # testing
 /coverage

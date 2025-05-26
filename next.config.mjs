@@ -6,9 +6,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "tenor.com",
       },
+      
       {
         protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
+        hostname: "xgdafzttwlbqtklethon.supabase.co",
       },
     ],
   },

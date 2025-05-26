@@ -1,5 +1,5 @@
 
-import UploadServiceForm from "@/components/dashboard/services/UploadServiceForm";
+import UploadServiceForm from "@/features/dashboard/components/services/UploadServiceForm";
 
 
 export default function page({

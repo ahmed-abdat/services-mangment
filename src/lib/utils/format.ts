@@ -1,30 +1,30 @@
-import { TUserTabel } from "@/types/services/user";
+import { TUserTable } from "@/types/services/user";
 import moment from "moment";
 
 export function formatUserForClient(
-  user: TUserTabel | null | undefined
-): FormattedUserTabel {
+  user: TUserTable | null | undefined
+): FormattedUserTable {
   if (!user) {
     // Return a default formatted user if input is null/undefined
     return {
       id: "",
-      fullName: "",
+      full_name: "",
       description: "",
-      startingDate: null,
-      endingDate: null,
+      starting_date: null,
+      ending_date: null,
       reminderDays: 0,
-      subscriptionStatus: "Expired",
+      subscription_status: "Expired",
     };
   }
 
   // Format dates if they are strings
   const formattedUser = {
     ...user,
-    startingDate: user.startingDate
-      ? moment(user.startingDate).format("YYYY-MM-DD")
+    starting_date: user.starting_date
+      ? moment(user.starting_date).format("YYYY-MM-DD")
       : null,
-    endingDate: user.endingDate
-      ? moment(user.endingDate).format("YYYY-MM-DD")
+    ending_date: user.ending_date
+      ? moment(user.ending_date).format("YYYY-MM-DD")
       : null,
   };
 
@@ -32,10 +32,10 @@ export function formatUserForClient(
 }
 
 // Define the return type explicitly
-export type FormattedUserTabel = Omit<
-  TUserTabel,
-  "startingDate" | "endingDate"
+export type FormattedUserTable = Omit<
+  TUserTable,
+  "starting_date" | "ending_date"
 > & {
-  startingDate: string | null;
-  endingDate: string | null;
+  starting_date: string | null;
+  ending_date: string | null;
 };

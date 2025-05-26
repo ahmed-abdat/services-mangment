@@ -1,13 +1,5 @@
+import { Database } from "@/types/database.types";
+import { Thumbnail as DashboardThumbnail } from "@/features/dashboard/types/dashboard.types";
 
-export type Thumbnail = {
-    name: string;
-    url: string;
-    file: File ;
-  } | null; 
-
-
-  export type Service = {
-    name : string;
-    id? : string;
-    thumbnail : Thumbnail;
-  }
+export type Service = Database["public"]["Tables"]["services"]["Row"];
+export type { DashboardThumbnail as Thumbnail };

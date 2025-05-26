@@ -1,5 +1,3 @@
-import { Timestamp } from "firebase/firestore/lite";
-
 export type TUserDate = {
   date: Date | undefined;
   setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
@@ -7,35 +5,35 @@ export type TUserDate = {
 
 export type TUserData = {
   id?: string;
-  fullName: string;
+  full_name: string;
   description: string;
   phone_number?: string;
-  startingDate: Date;
-  endingDate: Date;
+  starting_date: Date;
+  ending_date: Date;
 };
 
-// For internal use with Firestore
-export type TUserFirestore = {
+// For internal use with Supabase database
+export type TUserDatabase = {
   id?: string;
-  fullName: string;
+  full_name: string;
   description: string;
   phone_number?: string;
-  startingDate: Timestamp;
-  endingDate: Timestamp;
+  starting_date: string;
+  ending_date: string;
   reminderDays: number;
-  subscriptionStatus?: string;
+  subscription_status?: string;
 };
 
 // For use in the application (after data is fetched)
-export type TUserTabel = {
+export type TUserTable = {
   id?: string;
-  fullName: string;
+  full_name: string;
   description: string;
   phone_number?: string;
-  startingDate: string | null;
-  endingDate: string | null;
+  starting_date: string | null;
+  ending_date: string | null;
   reminderDays: number;
-  subscriptionStatus?: string;
+  subscription_status?: string;
 };
 
-export type FormattedUserTabel = TUserTabel;
+export type FormattedUserTable = TUserTable;

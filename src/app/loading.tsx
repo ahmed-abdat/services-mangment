@@ -1,8 +1,5 @@
+import { Loading } from "@/components/ui/loading";
+
 export default function Loader() {
-    return (
-      <div className="loader">
-      <div className="spinner"></div>
-    </div>
-    )
-  }
-  
+  return <Loading fullScreen text="Loading application..." />;
+}

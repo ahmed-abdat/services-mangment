@@ -25,13 +25,14 @@ import {
   addAccountUser,
   getAccountUser,
   updateAccountUser,
-} from "@/app/actions/users";
-import { getService } from "@/app/actions/services";
-import { getServiceAccount } from "@/app/actions/accounts";
+} from "@/features/dashboard/actions/service-users";
+import { getService } from "@/features/dashboard/actions/services";
+import { getServiceAccount } from "@/features/dashboard/actions/service-accounts";
 import { useRouter } from "next/navigation";
-import UserStartingDate from "@/components/dashboard/users/UserStartingDate";
-import UserEndingDate from "@/components/dashboard/users/UserEndingDate";
-import { TUserData, TUserTabel } from "@/types/services/user";
+import UserStartingDate from "@/features/dashboard/components/users/UserStartingDate";
+import UserEndingDate from "@/features/dashboard/components/users/UserEndingDate";
+import { TUserTable } from "@/types/services/user";
+import { TUserData } from "@/features/dashboard/types/dashboard.types";
 
 export default function UploadAccounts({
   params,
@@ -45,8 +46,8 @@ export default function UploadAccounts({
   const router = useRouter();
 
   const [accountName, setAccountName] = React.useState<string>("");
-  const [serciceName, setServiceName] = React.useState<string>("");
-  const [user, setUser] = React.useState<TUserTabel | null>(null);
+  const [serviceName, setServiceName] = React.useState<string>("");
+  const [user, setUser] = React.useState<TUserTable | null>(null);
   const [startingDate, setStartingDate] = React.useState<Date>();
   const [endingDate, setEndingDate] = React.useState<Date>();
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -59,7 +60,7 @@ export default function UploadAccounts({
     resolver: zodResolver(UserAccount),
     mode: "onChange",
     defaultValues: {
-      fullName: "",
+      full_name: "",
       description: "",
       phone_number: "",
     },
@@ -74,11 +75,11 @@ export default function UploadAccounts({
       }
 
       try {
-        const {
-          data: user,
-          success,
-          error,
-        } = await getAccountUser(serviceId, accountId, userId);
+        const { user, success, error } = await getAccountUser(
+          serviceId,
+          accountId,
+          userId
+        );
 
         if (!success || !user) {
           console.error("Failed to load user:", error);
@@ -90,16 +91,16 @@ export default function UploadAccounts({
         setUser(user);
 
         // Convert ISO string dates to Date objects for the date pickers
-        if (user.startingDate && user.endingDate) {
-          const start = new Date(user.startingDate);
-          const end = new Date(user.endingDate);
+        if (user.starting_date && user.ending_date) {
+          const start = new Date(user.starting_date);
+          const end = new Date(user.ending_date);
           setStartingDate(start);
           setEndingDate(end);
         }
 
         // Reset form with user data
         const formData = {
-          fullName: user.fullName,
+          full_name: user.full_name,
           description: user.description || "",
           phone_number: user.phone_number || "",
         };
@@ -121,11 +122,13 @@ export default function UploadAccounts({
 
     setLoading(true);
     try {
+      // Convert Date objects to ISO strings for the server action
       const userData: TUserData = {
-        ...data,
-        startingDate,
-        endingDate,
+        full_name: data.full_name,
         description: data.description || "",
+        phone_number: data.phone_number,
+        starting_date: startingDate.toISOString(),
+        ending_date: endingDate.toISOString(),
       };
 
       if (userId) {
@@ -195,13 +198,13 @@ export default function UploadAccounts({
       <h1 className="text-2xl tracking-tight text-center">
         {userId ? "Update" : "Create new"} user for{" "}
         <span className="font-semibold">{accountName}</span> in{" "}
-        <span className="font-semibold">{serciceName}</span> service
+        <span className="font-semibold">{serviceName}</span> service
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
-            name="fullName"
+            name="full_name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Full Name</FormLabel>

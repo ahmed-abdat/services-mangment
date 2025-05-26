@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -26,12 +23,12 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 
   .dark {
@@ -62,71 +59,150 @@
   }
 }
 
-
-
-
-
-  /* loader css */
-
-  .loader {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #fff;
+@layer utilities {
+  /* Card hover effect without animation */
+  .card-hover-effect {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
-  .spinner {
-    width: 56px;
-    height: 56px;
-    display: grid;
-    border: 3px solid #0000;
-    border-radius: 50%;
-    border-right-color: var(--primary-color) ;
-    -webkit-animation: spinner-a4dj62 1s infinite linear;
-            animation: spinner-a4dj62 1s infinite linear;
-   }
-   
-   .spinner::before,
-   .spinner::after {
-    content: "";
-    grid-area: 1/1;
-    margin: 3px;
-    border: inherit;
-    border-radius: 50%;
-    -webkit-animation: spinner-a4dj62 2s infinite;
-            animation: spinner-a4dj62 2s infinite;
-   }
-   
-   .spinner::after {
-    margin: 8px;
-    -webkit-animation-duration: 3s;
-            animation-duration: 3s;
-   }
-   
-   @-webkit-keyframes spinner-a4dj62 {
-    100% {
-     -webkit-transform: rotate(1turn);
-             transform: rotate(1turn);
-    }
-   }
-   
-   @keyframes spinner-a4dj62 {
-    100% {
-     -webkit-transform: rotate(1turn);
-             transform: rotate(1turn);
-    }
-   }
+}
 
-   /* ? matieres option style */
+/* Modern loader styles */
+.loader {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  gap: 1rem;
+}
 
-   [data-radix-popper-content-wrapper] {
-   width: 95%;
+.dark .loader {
+  background-color: #1a1a1a;
+  color: #f5f5f5;
+}
+
+.loader-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 1rem;
+}
+
+.dark .loader-text {
+  color: #94a3b8;
+}
+
+/* Clean spinner */
+.spinner {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.spinner-circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: hsl(var(--primary));
+  animation: spin 1s linear infinite;
+}
+
+.spinner-circle:nth-child(2) {
+  border-top-color: transparent;
+  border-right-color: hsl(var(--primary));
+  animation-duration: 1.2s;
+}
+
+.spinner-circle:nth-child(3) {
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+  border-top-color: transparent;
+  border-left-color: hsl(var(--primary));
+  animation-duration: 0.8s;
+  animation-direction: reverse;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Button spinner */
+.btn-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+  margin-right: 0.5rem;
+}
+
+/* Pulse loading effect for content */
+.pulse-loading {
+  position: relative;
+  overflow: hidden;
+  background-color: #f3f4f6;
+  border-radius: 0.25rem;
+}
+
+.dark .pulse-loading {
+  background-color: #374151;
+}
+
+.pulse-loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: pulse 1.5s infinite;
+}
+
+.dark .pulse-loading::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+}
+
+@keyframes pulse {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
 }
 
 @media screen and (min-width: 640px) {
-    [data-radix-popper-content-wrapper] {
-        width: 40%;
-    }
-  
+  [data-radix-popper-content-wrapper] {
+    width: var(--radix-popper-anchor-width);
+  }
 }

@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { signOut } from "@/app/actions";
 
 export default function Header() {
   const router = useRouter();
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     try {
-      // Remove user from localStorage
-      localStorage.removeItem("user");
+      // Sign out using Supabase Auth
+      await signOut();
+
       // Redirect to home page
       router.push("/");
       toast.success("Signed out successfully");

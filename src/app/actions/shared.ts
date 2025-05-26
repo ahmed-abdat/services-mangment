@@ -1,9 +1,5 @@
-import { app } from "@/config/firebase";
-import { getFirestore } from "firebase/firestore/lite";
-import { Timestamp } from "firebase/firestore/lite";
 import moment from "moment";
-
-export const firestore = getFirestore(app);
+import { createClient } from "@/utils/supabase/server";
 
 // Shared response type for all actions
 export type ActionResponse<T> = {
@@ -14,13 +10,13 @@ export type ActionResponse<T> = {
 
 // Calculate reminder days (used in user management)
 export const calculateReminderDays = (
-  startingDate: Timestamp | null,
-  endingDate: Timestamp | null
+  starting_date: string | null,
+  ending_date: string | null
 ): number => {
-  if (!startingDate || !endingDate) return 0;
+  if (!starting_date || !ending_date) return 0;
 
   const now = moment().startOf("day"); // Start of today
-  const end = moment(endingDate.toDate()).endOf("day"); // End of the end date
+  const end = moment(ending_date).endOf("day"); // End of the end date
 
   // If already expired, return 0
   if (now.isAfter(end)) {
@@ -60,13 +56,18 @@ export function validateRequiredFields(
 }
 
 // Format date for consistency
-export function formatFirebaseDate(date: Timestamp | null): string | null {
+export function formatDate(date: string | null): string | null {
   if (!date) return null;
-  return moment(date.toDate()).format("YYYY/MM/DD");
+  return moment(date).format("YYYY/MM/DD");
 }
 
-// Check if a document exists
-export function isExpired(date: Timestamp | null): boolean {
+// Check if a date is expired
+export function isExpired(date: string | null): boolean {
   if (!date) return true;
-  return moment().isAfter(moment(date.toDate()));
+  return moment().isAfter(moment(date));
+}
+
+// Get Supabase client
+export async function getSupabaseClient() {
+  return await createClient();
 }

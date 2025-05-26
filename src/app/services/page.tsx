@@ -1,9 +1,9 @@
 
-import NoServicesFound from "@/components/dashboard/NoServicesFound";
-import ServiceHeader from "@/components/dashboard/ServiceHeader";
-import { getServices } from "@/app/actions/services";
-import ServiceCard from "@/components/dashboard/ServiceCard";
-import { DeleteModal } from "@/components/dashboard/DeleteModel";
+import NoServicesFound from "@/features/dashboard/components/NoServicesFound";
+import ServiceHeader from "@/features/dashboard/components/ServiceHeader";
+import { getServices } from "@/features/dashboard/actions/services";
+import ServiceCard from "@/features/dashboard/components/ServiceCard";
+import { DeleteModal } from "@/features/dashboard/components/DeleteModel";
 
 export default async function Services({
   searchParams,

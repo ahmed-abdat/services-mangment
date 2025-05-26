@@ -23,12 +23,12 @@ import {
 import { toast } from "sonner";
 import {
   addServiceAccount,
-  checkifAccountNameExiste,
+  checkIfAccountNameExists,
   getServiceAccount,
   getServiceAccounts,
   updateServiceAccount,
-} from "@/app/actions/accounts";
-import { getService } from "@/app/actions/services";
+} from "@/features/dashboard/actions/service-accounts";
+import { getService } from "@/features/dashboard/actions/services";
 import { useRouter } from "next/navigation";
 import { ServiceAccount } from "@/types/services/service-accounts";
 
@@ -82,7 +82,7 @@ export default function UploadAccounts({
       setLoading(true);
 
       // Check if account name exists
-      const { success: isNameExiste } = await checkifAccountNameExiste(
+      const { success: isNameExiste } = await checkIfAccountNameExists(
         params.serviceId,
         data.name.trim()
       );
