@@ -34,13 +34,7 @@ export function validateFileSize(
  */
 export function validateImageFileType(
   file: File,
-  allowedTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-  ]
+  allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 ): { isValid: boolean; error?: string } {
   if (!allowedTypes.includes(file.type)) {
     const allowedExtensions = allowedTypes
