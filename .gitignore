@@ -15,6 +15,9 @@
 migration_to_supabase/*
 migrations/*
 
+# docs 
+docs/*
+
 
 # testing
 /coverage

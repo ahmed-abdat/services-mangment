@@ -66,11 +66,10 @@ export default function UploadAccounts({
     },
   });
 
-  // get user data
+  // get user data for editing (only when userId is provided)
   useEffect(() => {
     const fetchUserData = async () => {
       if (!userId) {
-        console.log("No userId provided, skipping fetch");
         return;
       }
 

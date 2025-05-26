@@ -46,6 +46,11 @@ export default function UploadAccounts({
   const form = useForm<TAccountsService>({
     resolver: zodResolver(AccountsService),
     mode: "onChange",
+    defaultValues: {
+      name: "",
+      email: "",
+      details: "",
+    },
   });
 
   // get the service name and account details
@@ -67,10 +72,11 @@ export default function UploadAccounts({
       if (!success || !account) {
         return;
       }
-      form.setValue("name", account.name);
-      form.setValue("email", account.email);
-      form.setValue("details", account.details);
+      form.setValue("name", account.name || "");
+      form.setValue("email", account.email || "");
+      form.setValue("details", account.details || "");
     };
+
     fetchServiceName();
     fechAccountDetails();
   }, [params.serviceId, accountId, form]);

@@ -2,6 +2,7 @@ import { tajawal, roboto } from "@/app/font/font";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { Metadata } from "next";
+import Stagewise from "@/components/stagewise-toolbar";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -47,6 +48,8 @@ export default function RootLayout({
       <body className={`${roboto.className} ${tajawal.className}`}>
         {children}
         <Toaster position="top-center" richColors dir="ltr" />
+        {/* Stagewise toolbar - only loads in development */}
+        <Stagewise />
       </body>
     </html>
   );

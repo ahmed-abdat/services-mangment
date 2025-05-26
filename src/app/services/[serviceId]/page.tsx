@@ -5,6 +5,7 @@ import ServiceHeader from "@/features/dashboard/components/ServiceHeader";
 import AccountCard from "@/features/dashboard/components/AccountCard";
 import { ServiceAccount } from "@/types/services/service-accounts";
 import { DeleteModal } from "@/features/dashboard";
+import CardGrid from "@/components/card-grid";
 
 interface PosteProps {
   params: {
@@ -50,14 +51,16 @@ export default async function ServiceName({
       {!hasAccounts ? (
         <NoServicesFound serviceId={serviceId} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 gap-8 mt-4">
-          {accounts.map((account: ServiceAccount) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              serviceId={serviceId}
-            />
-          ))}
+        <div className="mt-6">
+          <CardGrid>
+            {accounts.map((account: ServiceAccount) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                serviceId={serviceId}
+              />
+            ))}
+          </CardGrid>
         </div>
       )}
     </section>
