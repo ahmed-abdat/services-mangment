@@ -12,10 +12,15 @@ export const UserAccount = z.object({
     .optional(),
   phone_number: z
     .string()
-    .regex(/^\d{8}$/, {
-      message: "Phone number must be exactly 8 digits.",
+    .regex(/^[\d\s\-\+\(\)]*$/, {
+      message:
+        "Phone number can only contain numbers, spaces, dashes, plus signs, and parentheses.",
     })
-    .optional(),
+    .min(1, {
+      message: "Phone number cannot be empty if provided.",
+    })
+    .optional()
+    .or(z.literal("")),
 });
 
 export type TUserAccount = z.infer<typeof UserAccount>;

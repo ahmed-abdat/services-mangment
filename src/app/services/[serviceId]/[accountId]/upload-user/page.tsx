@@ -238,7 +238,7 @@ export default function UploadAccounts({
                     {...field}
                   />
                 </FormControl>
-                <FormDescription>Format: 42049074</FormDescription>
+                <FormDescription>Enter any valid phone number</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
