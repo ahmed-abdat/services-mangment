@@ -5,8 +5,20 @@ import { revalidatePath } from "next/cache";
 import { TUserData, ServiceUsersInsert } from "../types/dashboard.types";
 import moment from "moment";
 
-// Calculate reminder days
-function calculateReminderDays(ending_date: string): number {
+// Calculate subscription duration in days between start and end dates
+function calculateSubscriptionDuration(
+  starting_date: string,
+  ending_date: string
+): number {
+  const start = moment(starting_date);
+  const end = moment(ending_date);
+
+  // Calculate the difference in days (inclusive of both start and end dates)
+  return end.diff(start, "days") + 1;
+}
+
+// Calculate remaining days until expiration from today
+function calculateRemainingDays(ending_date: string): number {
   const now = moment().startOf("day");
   const end = moment(ending_date).endOf("day");
 
@@ -16,6 +28,20 @@ function calculateReminderDays(ending_date: string): number {
   }
 
   // Return remaining days until expiration (inclusive of end date)
+  return end.diff(now, "days") + 1;
+}
+
+// Legacy function for backward compatibility - now returns subscription duration
+function calculateReminderDays(ending_date: string): number {
+  // For now, we'll keep the old behavior but this should be updated
+  // to use calculateSubscriptionDuration once we have access to starting_date
+  const now = moment().startOf("day");
+  const end = moment(ending_date).endOf("day");
+
+  if (now.isAfter(end)) {
+    return 0;
+  }
+
   return end.diff(now, "days") + 1;
 }
 
@@ -74,7 +100,11 @@ export async function getAccountUser(
     }
 
     if (user) {
-      const reminderDays = calculateReminderDays(user.ending_date);
+      // Calculate subscription duration between start and end dates
+      const reminderDays = calculateSubscriptionDuration(
+        user.starting_date,
+        user.ending_date
+      );
       return {
         success: true,
         user: { ...user, reminderDays },
@@ -103,7 +133,7 @@ export async function getAccountUsers(serviceId: string, accountId: string) {
 
     const usersWithReminder = users.map((user) => ({
       ...user,
-      reminderDays: calculateReminderDays(user.ending_date),
+      reminderDays: calculateSubscriptionDuration(user.starting_date, user.ending_date),
     }));
 
     return { success: true, users: usersWithReminder };

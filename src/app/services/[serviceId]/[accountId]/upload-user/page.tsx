@@ -66,6 +66,14 @@ export default function UploadAccounts({
     },
   });
 
+  // Helper function to format date without timezone conversion
+  const formatDateForStorage = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // get user data for editing (only when userId is provided)
   useEffect(() => {
     const fetchUserData = async () => {
@@ -121,13 +129,13 @@ export default function UploadAccounts({
 
     setLoading(true);
     try {
-      // Convert Date objects to ISO strings for the server action
+      // Convert Date objects to YYYY-MM-DD format without timezone conversion
       const userData: TUserData = {
         full_name: data.full_name,
         description: data.description || "",
         phone_number: data.phone_number,
-        starting_date: startingDate.toISOString(),
-        ending_date: endingDate.toISOString(),
+        starting_date: formatDateForStorage(startingDate),
+        ending_date: formatDateForStorage(endingDate),
       };
 
       if (userId) {

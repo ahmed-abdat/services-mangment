@@ -8,15 +8,27 @@ export type ActionResponse<T> = {
   error?: string;
 };
 
-// Calculate reminder days (used in user management)
+// Calculate subscription duration between start and end dates (renamed from calculateReminderDays)
+// This now represents the total duration of the subscription, not remaining days
 export const calculateReminderDays = (
   starting_date: string | null,
   ending_date: string | null
 ): number => {
   if (!starting_date || !ending_date) return 0;
 
-  const now = moment().startOf("day"); // Start of today
-  const end = moment(ending_date).endOf("day"); // End of the end date
+  const start = moment(starting_date);
+  const end = moment(ending_date);
+
+  // Calculate the difference in days (inclusive of both start and end dates)
+  return end.diff(start, "days") + 1;
+};
+
+// Calculate remaining days until expiration from today
+export const calculateRemainingDays = (ending_date: string | null): number => {
+  if (!ending_date) return 0;
+
+  const now = moment().startOf("day");
+  const end = moment(ending_date).endOf("day");
 
   // If already expired, return 0
   if (now.isAfter(end)) {

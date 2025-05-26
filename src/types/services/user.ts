@@ -20,7 +20,7 @@ export type TUserDatabase = {
   phone_number?: string;
   starting_date: string;
   ending_date: string;
-  reminderDays: number;
+  reminderDays: number; // Duration between start and end dates in days
   subscription_status?: string;
 };
 
@@ -32,7 +32,7 @@ export type TUserTable = {
   phone_number?: string;
   starting_date: string | null;
   ending_date: string | null;
-  reminderDays: number;
+  reminderDays: number; // Duration between start and end dates in days
   subscription_status?: string;
 };
 

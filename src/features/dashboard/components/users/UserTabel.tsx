@@ -70,7 +70,7 @@ function UsersTable({ users, params }: UsersTableProps) {
       description: false,
       starting_date: true,
       ending_date: true,
-      reminderDays: true,
+      reminderDays: true, // Now represents duration
       subscription_status: true,
       actions: true,
     });
@@ -203,7 +203,7 @@ function UsersTable({ users, params }: UsersTableProps) {
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Reminder Days
+            Duration
             <CaretSortIcon className="ml-2 h-4 w-4" />
           </Button>
         ),
