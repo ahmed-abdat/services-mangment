@@ -12,8 +12,8 @@ import {
   Users,
   Calendar,
 } from "lucide-react";
-import { mainRoute } from "@/lib/mainroute";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { getServiceAccountCount } from "@/app/actions/service-actions";
+import { DeleteServiceDialog } from "./services/DeleteServiceDialog";
+import { useRouter } from "next/navigation";
 
 // Helper function to format date
 const formatDate = (dateString: string | null) => {
@@ -36,10 +38,8 @@ const formatDate = (dateString: string | null) => {
 export default function ServiceProfile({ service }: { service: Service }) {
   const [accountCount, setAccountCount] = useState<number>(0);
   const [isPending, startTransition] = useTransition();
-
-  const url = new URL(`${mainRoute}/services`);
-  url.searchParams.set("serviceName", service?.id ?? "0");
-  url.searchParams.set("openModal", "true");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const router = useRouter();
 
   const updateUrl = `/services/${service?.id}/edit`;
 
@@ -136,11 +136,14 @@ export default function ServiceProfile({ service }: { service: Service }) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={url.toString()}>
-                  <div className="p-2 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors">
-                    <Trash className="w-4 h-4" />
-                  </div>
-                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash className="w-4 h-4" />
+                </Button>
               </TooltipTrigger>
               <TooltipContent>Delete service</TooltipContent>
             </Tooltip>
@@ -158,6 +161,16 @@ export default function ServiceProfile({ service }: { service: Service }) {
           </TooltipProvider>
         </div>
       </CardContent>
+
+      {/* Delete Dialog */}
+      <DeleteServiceDialog
+        isOpen={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        service={service}
+        onDeleted={() => {
+          router.refresh();
+        }}
+      />
     </Card>
   );
 }

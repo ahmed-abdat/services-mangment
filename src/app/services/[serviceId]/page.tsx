@@ -4,22 +4,15 @@ import NoServicesFound from "@/features/dashboard/components/NoServicesFound";
 import ServiceHeader from "@/features/dashboard/components/ServiceHeader";
 import AccountCard from "@/features/dashboard/components/AccountCard";
 import { ServiceAccount } from "@/types/services/service-accounts";
-import { DeleteModal } from "@/features/dashboard";
 import CardGrid from "@/components/card-grid";
 
 interface PosteProps {
   params: {
     serviceId: string;
   };
-  searchParams: {
-    [key: string]: string | string[] | undefined;
-  };
 }
 
-export default async function ServiceName({
-  params,
-  searchParams,
-}: PosteProps) {
+export default async function ServiceName({ params }: PosteProps) {
   const { serviceId } = params;
 
   // Get service details first
@@ -46,7 +39,6 @@ export default async function ServiceName({
 
   return (
     <section>
-      <DeleteModal searchParams={searchParams} />
       <ServiceHeader serviceId={serviceId} />
       {!hasAccounts ? (
         <NoServicesFound serviceId={serviceId} />

@@ -2,14 +2,9 @@ import NoServicesFound from "@/features/dashboard/components/NoServicesFound";
 import ServiceHeader from "@/features/dashboard/components/ServiceHeader";
 import { getServices } from "@/features/dashboard/actions/services";
 import ServiceCard from "@/features/dashboard/components/ServiceCard";
-import { DeleteModal } from "@/features/dashboard/components/DeleteModel";
 import CardGrid from "@/components/card-grid";
 
-export default async function Services({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default async function Services() {
   const { services, success } = await getServices();
 
   if (success === false) {
@@ -22,7 +17,6 @@ export default async function Services({
 
   return (
     <>
-      <DeleteModal searchParams={searchParams} />
       <ServiceHeader />
       {services.length === 0 ? (
         <NoServicesFound />

@@ -13,8 +13,8 @@ import {
   Users,
 } from "lucide-react";
 import { ServiceAccount } from "@/types/services/service-accounts";
-import { mainRoute } from "@/lib/mainroute";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +24,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { getAccountUsers } from "@/features/dashboard/actions/service-users";
+import { DeleteAccountDialog } from "./accounts/DeleteAccountDialog";
+import { useRouter } from "next/navigation";
 
 // Helper function to format date
 const formatDate = (dateString: string | null) => {
@@ -58,6 +60,8 @@ export default function AccountCard({
 }) {
   const [userCount, setUserCount] = useState<number>(0);
   const [isLoadingCount, setIsLoadingCount] = useState(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const router = useRouter();
 
   // Fetch user count for shared accounts
   useEffect(() => {
@@ -86,22 +90,8 @@ export default function AccountCard({
     }
   }, [account, serviceId]);
 
-  // Create URLs for delete and update actions
-  const getUrls = () => {
-    const url = new URL(`${mainRoute}/services/${serviceId}`);
-    url.searchParams.set("serviceName", serviceId);
-    url.searchParams.set("openModal", "true");
-    url.searchParams.set("accountId", account.id);
-
-    const updateUrl = new URL(
-      `${mainRoute}/services/${serviceId}/upload-accounts`
-    );
-    updateUrl.searchParams.set("accountId", account.id);
-
-    return { url: url.toString(), updateUrl: updateUrl.toString() };
-  };
-
-  const { url, updateUrl } = getUrls();
+  // Create update URL
+  const updateUrl = `/services/${serviceId}/upload-accounts?accountId=${account.id}`;
   const expirationStatus = getExpirationStatus(account.expires_at);
 
   if (!account || !serviceId) {
@@ -235,11 +225,14 @@ export default function AccountCard({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={url}>
-                  <div className="p-2 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors">
-                    <Trash className="w-4 h-4" />
-                  </div>
-                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash className="w-4 h-4" />
+                </Button>
               </TooltipTrigger>
               <TooltipContent>Delete account</TooltipContent>
             </Tooltip>
@@ -257,6 +250,17 @@ export default function AccountCard({
           </TooltipProvider>
         </div>
       </CardContent>
+
+      {/* Delete Dialog */}
+      <DeleteAccountDialog
+        isOpen={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        serviceId={serviceId}
+        account={account}
+        onDeleted={() => {
+          router.refresh();
+        }}
+      />
     </Card>
   );
 }
