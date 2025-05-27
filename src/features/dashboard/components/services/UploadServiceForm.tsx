@@ -150,14 +150,22 @@ export default function UploadServiceForm({
       return;
     }
 
+    // Check if we're creating a new service (not editing)
+    // We're editing if we have both a name parameter AND localStorage data for the service
+    const localService = localStorage.getItem("service");
+    const localServiceData = localService ? JSON.parse(localService) : null;
+    const isEditing = name && localServiceData && localServiceData.id;
+
+    // For new services, require thumbnail
+    if (!isEditing && thumbnailFiles.length === 0) {
+      toast.error("Please upload a service thumbnail");
+      return;
+    }
+
     setLoading(true);
     try {
-      // Get the local service data if editing
-      const localService = localStorage.getItem("service");
-      const localServiceData = localService ? JSON.parse(localService) : null;
-
       // Check if we're updating or creating
-      if (name && localServiceData) {
+      if (isEditing) {
         // UPDATING EXISTING SERVICE
         // Check if anything changed
         if (
@@ -171,9 +179,15 @@ export default function UploadServiceForm({
 
         // Handle name update
         if (localServiceData.name.trim() !== serviceName.trim()) {
-          await updateService(localServiceData.id, {
+          const updateResult = await updateService(localServiceData.id, {
             name: serviceName.trim(),
           });
+
+          if (!updateResult.success) {
+            throw new Error(
+              updateResult.error || "Failed to update service name"
+            );
+          }
         }
 
         // Handle thumbnail update if there's a new file
@@ -224,11 +238,15 @@ export default function UploadServiceForm({
         // First create the service with minimal data
         const result = await addService(serviceData);
 
-        if (!result.success || !result.serviceId) {
-          throw new Error("Failed to create service");
+        if (!result.success) {
+          throw new Error(result.error || "Failed to create service");
         }
 
-        // Then upload the thumbnail if provided
+        if (!result.serviceId) {
+          throw new Error("Service was created but no ID was returned");
+        }
+
+        // Then upload the thumbnail (required for new services)
         if (thumbnailFiles.length > 0) {
           const file = thumbnailFiles[0];
           const fileName = file.name;
@@ -297,10 +315,14 @@ export default function UploadServiceForm({
         )}
       </div>
 
-      <Card className="w-full mb-6">
+      <Card
+        className={cn("w-full mb-6", {
+          "border-red-500": !name && thumbnailFiles.length === 0,
+        })}
+      >
         <CardHeader className="px-4 pt-3 pb-2">
           <CardTitle className="font-semibold text-lg">
-            Service Thumbnail
+            Service Thumbnail <span className="text-red-500">*</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
@@ -348,13 +370,22 @@ export default function UploadServiceForm({
               {name ? "Update Service" : "Create New Service"}&quot; to upload.
             </p>
           )}
+
+          {/* Show validation message for new services without thumbnail */}
+          {!name && thumbnailFiles.length === 0 && (
+            <p className="text-sm text-red-500 mt-2">
+              Please upload a service thumbnail (required)
+            </p>
+          )}
         </CardContent>
       </Card>
 
       <Button
         type="submit"
         className="w-full my-4 mx-auto md:max-w-full text-lg flex items-center gap-x-2"
-        disabled={loading}
+        disabled={
+          loading || !serviceName || (!name && thumbnailFiles.length === 0)
+        }
       >
         {name ? "Update Service" : "Create New Service"}
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

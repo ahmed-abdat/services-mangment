@@ -15,7 +15,7 @@ export default function NoServicesFound({
       ? `/services/${serviceId}/${accountId}/upload-user`
       : serviceId
       ? `/services/${serviceId}/upload-accounts`
-      : "/services/upload-servers";
+      : "/services/create";
   return (
     <>
       <div className="mt-8">

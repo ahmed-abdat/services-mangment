@@ -28,7 +28,8 @@ export default function DashboardLinks() {
         // Skip fetching account for known route segments that aren't account IDs
         const isRouteSegment = [
           "upload-accounts",
-          "upload-servers",
+          "create",
+          "edit",
           "upload-user",
         ].includes(accountId);
 
@@ -54,7 +55,18 @@ export default function DashboardLinks() {
   const getDisplayName = (path: string, index: number) => {
     if (index === 1 && serviceName) return serviceName;
     if (index === 2 && accountName) return accountName;
-    return path.charAt(0).toUpperCase() + path.slice(1);
+
+    // Better display names for common routes
+    const routeDisplayNames: Record<string, string> = {
+      create: "Create Service",
+      edit: "Edit Service",
+      "upload-accounts": "Upload Accounts",
+      "upload-user": "Upload User",
+    };
+
+    return (
+      routeDisplayNames[path] || path.charAt(0).toUpperCase() + path.slice(1)
+    );
   };
 
   return (

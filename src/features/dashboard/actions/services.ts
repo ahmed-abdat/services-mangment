@@ -68,11 +68,60 @@ async function handleThumbnail(serviceId: string, thumbnail: Thumbnail | null) {
   }
 }
 
+// Helper function to check if service name already exists
+async function checkServiceNameExists(name: string, excludeId?: string) {
+  const supabase = await createClient();
+
+  try {
+    let query = supabase
+      .from("services")
+      .select("id, name")
+      .eq("name", name.trim());
+
+    // If excludeId is provided, exclude that service from the check (for updates)
+    if (excludeId) {
+      query = query.neq("id", excludeId);
+    }
+
+    const { data, error } = await query.single();
+
+    if (error) {
+      // If no service found, that's good (name is available)
+      if (error.code === "PGRST116") {
+        return { exists: false };
+      }
+      throw error;
+    }
+
+    return { exists: true, existingService: data };
+  } catch (error) {
+    console.error("Error checking service name:", error);
+    throw error;
+  }
+}
+
 // Add new service
 export async function addService(service: ServiceCreate) {
   const supabase = await createClient();
 
   try {
+    // Validate service name is not empty
+    if (!service.name || !service.name.trim()) {
+      return {
+        success: false,
+        error: "Service name is required",
+      };
+    }
+
+    // Check if service name already exists
+    const nameCheck = await checkServiceNameExists(service.name.trim());
+    if (nameCheck.exists) {
+      return {
+        success: false,
+        error: `Service name "${service.name.trim()}" already exists. Please choose a different name.`,
+      };
+    }
+
     // Create the initial service without thumbnail
     const newService: ServicesInsert = {
       name: service.name.trim(),
@@ -248,8 +297,30 @@ export async function updateService(
   const supabase = await createClient();
 
   try {
+    // If updating the name, check for uniqueness
+    if (updates.name) {
+      const trimmedName = updates.name.trim();
+
+      // Validate name is not empty
+      if (!trimmedName) {
+        return {
+          success: false,
+          error: "Service name cannot be empty",
+        };
+      }
+
+      // Check if the new name already exists (excluding current service)
+      const nameCheck = await checkServiceNameExists(trimmedName, id);
+      if (nameCheck.exists) {
+        return {
+          success: false,
+          error: `Service name "${trimmedName}" already exists. Please choose a different name.`,
+        };
+      }
+    }
+
     const updateData: Partial<ServicesUpdate> = {
-      ...(updates.name && { name: updates.name }),
+      ...(updates.name && { name: updates.name.trim() }),
       ...(updates.thumbnail_url && { thumbnail_url: updates.thumbnail_url }),
       // Use updated_at if it exists in your schema
     };

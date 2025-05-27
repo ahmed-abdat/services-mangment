@@ -41,8 +41,7 @@ export default function ServiceProfile({ service }: { service: Service }) {
   url.searchParams.set("serviceName", service?.id ?? "0");
   url.searchParams.set("openModal", "true");
 
-  const updateUrl = new URL(`${mainRoute}/services/upload-servers`);
-  updateUrl.searchParams.set("serviceName", service?.id ?? "0");
+  const updateUrl = `/services/${service?.id}/edit`;
 
   // Fetch account count using server action
   useEffect(() => {
@@ -148,7 +147,7 @@ export default function ServiceProfile({ service }: { service: Service }) {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href={updateUrl.toString()}>
+                <Link href={updateUrl}>
                   <div className="p-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors">
                     <Settings className="w-4 h-4" />
                   </div>

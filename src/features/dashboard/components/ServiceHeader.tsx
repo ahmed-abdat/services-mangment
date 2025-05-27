@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export default function ServiceHeader({ serviceId }: { serviceId?: string }) {
   const uploadServicesUrl = serviceId
     ? `/services/${serviceId}/upload-accounts`
-    : "/services/upload-servers";
+    : "/services/create";
   const router = useRouter();
   const [serviceName, setServiceName] = React.useState<string>("");
 
