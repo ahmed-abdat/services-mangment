@@ -27,7 +27,7 @@ export default function Header() {
   };
 
   return (
-    <header className="border-b top-0 bg-white xl:sticky">
+    <header className="border-b top-0 bg-white sticky z-50">
       <nav className="pt-1.5 flex items-center justify-between flex-wrap text-sm sm:flex-nowrap custom-screen-xl">
         <div>
           <Link href="/services" className="flex items-center gap-2">

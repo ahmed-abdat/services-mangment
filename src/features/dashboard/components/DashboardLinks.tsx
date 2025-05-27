@@ -58,7 +58,7 @@ export default function DashboardLinks() {
   };
 
   return (
-    <div className="xl:sticky xl:top-16 bg-white p-4">
+    <div className="sticky top-14 bg-white p-2 sm:p-4 z-40 shadow-sm border-b">
       <Breadcrumb>
         <BreadcrumbList>
           {pathNames.map((path, index) => {
