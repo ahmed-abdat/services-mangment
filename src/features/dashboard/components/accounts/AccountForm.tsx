@@ -424,7 +424,6 @@ export default function AccountForm({
                         : null;
                       field.onChange(formattedDate);
                     }}
-                    minDate={new Date()}
                   />
                   <FormDescription>
                     Optional: When shared account access expires (affects all

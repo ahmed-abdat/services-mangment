@@ -88,8 +88,8 @@ export default function AccountDatePicker({
       return date < new Date(startingDate);
     }
 
-    // Default: don't allow past dates
-    return date < new Date();
+    // Default: allow all dates (no arbitrary restrictions)
+    return false;
   };
 
   return (

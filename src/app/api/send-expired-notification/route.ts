@@ -3,6 +3,32 @@ import { Resend } from "resend";
 import { ExpiredAccountNotification } from "@/emails/ExpiredAccountNotification";
 import { createClient } from "@/utils/supabase/server";
 
+// Type definitions for better type safety
+interface Service {
+  id: string;
+  name: string;
+}
+
+interface ExpiredAccount {
+  id: string;
+  name: string;
+  email: string;
+  expires_at: string;
+  account_type: "personal" | "shared";
+  user_full_name: string | null;
+  user_phone_number: string | null;
+  created_at: string;
+  service_id: string;
+  services: Service;
+}
+
+interface User {
+  id: string;
+  full_name: string | null;
+  email: string;
+  phone_number: string | null;
+}
+
 // Initialize Resend with API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -61,7 +87,8 @@ export async function POST(request: NextRequest) {
       `
       )
       .lt("expires_at", new Date().toISOString())
-      .not("expires_at", "is", null); // Only accounts with expiration dates
+      .not("expires_at", "is", null) // Only accounts with expiration dates
+      .returns<ExpiredAccount[]>();
 
     if (accountsError) {
       console.error("Error fetching expired accounts:", accountsError);
@@ -79,53 +106,56 @@ export async function POST(request: NextRequest) {
     }
 
     // Process each expired account
-    const emailPromises = expiredAccounts.map(async (account) => {
-      try {
-        // For personal accounts, use account data directly
-        if (account.account_type === "personal") {
-          const users = [
-            {
-              id: account.id,
-              full_name: account.user_full_name,
-              email: account.email,
-              phone_number: account.user_phone_number,
-            },
-          ];
+    const emailPromises = expiredAccounts.map(
+      async (account: ExpiredAccount) => {
+        try {
+          // For personal accounts, use account data directly
+          if (account.account_type === "personal") {
+            const users: User[] = [
+              {
+                id: account.id,
+                full_name: account.user_full_name,
+                email: account.email,
+                phone_number: account.user_phone_number,
+              },
+            ];
+
+            return await sendNotificationEmail({
+              account,
+              users,
+              userCount: 1,
+            });
+          }
+
+          // For shared accounts, fetch all users
+          const { data: users, error: usersError } = await supabase
+            .from("users")
+            .select("id, full_name, email, phone_number")
+            .eq("account_id", account.id)
+            .returns<User[]>();
+
+          if (usersError) {
+            console.error(
+              `Error fetching users for account ${account.id}:`,
+              usersError
+            );
+            return { success: false, error: usersError.message };
+          }
 
           return await sendNotificationEmail({
             account,
-            users,
-            userCount: 1,
+            users: users || [],
+            userCount: users?.length || 0,
           });
+        } catch (error) {
+          console.error(`Error processing account ${account.id}:`, error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
         }
-
-        // For shared accounts, fetch all users
-        const { data: users, error: usersError } = await supabase
-          .from("users")
-          .select("id, full_name, email, phone_number")
-          .eq("account_id", account.id);
-
-        if (usersError) {
-          console.error(
-            `Error fetching users for account ${account.id}:`,
-            usersError
-          );
-          return { success: false, error: usersError.message };
-        }
-
-        return await sendNotificationEmail({
-          account,
-          users: users || [],
-          userCount: users?.length || 0,
-        });
-      } catch (error) {
-        console.error(`Error processing account ${account.id}:`, error);
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        };
       }
-    });
+    );
 
     // Wait for all emails to be processed
     const results = await Promise.allSettled(emailPromises);
@@ -153,7 +183,7 @@ export async function POST(request: NextRequest) {
       failed,
       expiredAccounts: expiredAccounts.map((acc) => ({
         accountName: acc.name,
-        serviceName: (acc.services as any).name,
+        serviceName: acc.services.name,
         expiredDate: acc.expires_at,
       })),
     });
@@ -177,8 +207,8 @@ async function sendNotificationEmail({
   users,
   userCount,
 }: {
-  account: any;
-  users: any[];
+  account: ExpiredAccount;
+  users: User[];
   userCount: number;
 }) {
   try {
@@ -191,7 +221,7 @@ async function sendNotificationEmail({
       subject: `🚨 Services Management - Account Expired: ${account.name}`,
       react: ExpiredAccountNotification({
         accountName: account.name,
-        serviceName: (account.services as any).name,
+        serviceName: account.services.name,
         expiredDate: account.expires_at,
         accountType: account.account_type,
         userCount,
