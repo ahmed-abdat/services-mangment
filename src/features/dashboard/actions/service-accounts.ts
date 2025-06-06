@@ -110,7 +110,7 @@ export async function checkIfAccountNameExists(
   }
 }
 
-// Get all service accounts
+// Get all service accounts sorted by expiration date (expiring soonest first)
 export async function getServiceAccounts(serviceId: string) {
   const supabase = await createClient();
 
@@ -119,6 +119,10 @@ export async function getServiceAccounts(serviceId: string) {
       .from("accounts")
       .select("*")
       .eq("service_id", serviceId)
+      // Sort by expiration date: accounts with expires_at first (ascending), then nulls last
+      // This puts expiring accounts at the top, with the soonest expiring first
+      .order("expires_at", { ascending: true, nullsFirst: false })
+      // Secondary sort by created_at for accounts with same/null expiration dates
       .order("created_at", { ascending: false });
 
     if (error) throw error;
