@@ -126,39 +126,48 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get account details for shared users
+    // Collect account IDs from shared users to fix N+1 query problem
     let sharedUsers: any[] = [];
     if (usersExpiring && usersExpiring.length > 0) {
-      for (const user of usersExpiring) {
-        const { data: account, error: accountError } = await supabase
-          .from("accounts")
-          .select(
-            `
-            id,
-            name,
-            email,
-            account_type,
-            service_id,
-            services (
-              id,
-              name
-            )
-          `
-          )
-          .eq("id", user.account_id)
-          .single();
+      // Collect all account IDs
+      const accountIds = usersExpiring.map((user) => user.account_id);
 
-        if (accountError) {
-          console.error(
-            `Error getting account for user ${user.full_name}:`,
-            accountError
-          );
-        } else if (account) {
-          sharedUsers.push({
-            ...user,
-            accounts: account,
-          });
-        }
+      // Single query to fetch all accounts
+      const { data: accounts, error: accountsError } = await supabase
+        .from("accounts")
+        .select(
+          `
+          id,
+          name,
+          email,
+          account_type,
+          service_id,
+          services (
+            id,
+            name
+          )
+        `
+        )
+        .in("id", accountIds);
+
+      if (accountsError) {
+        console.error(
+          "Error fetching accounts for shared users:",
+          accountsError
+        );
+      } else if (accounts) {
+        // Create a map for O(1) lookup
+        const accountsMap = new Map(
+          accounts.map((account) => [account.id, account])
+        );
+
+        // Map users to their accounts
+        sharedUsers = usersExpiring
+          .map((user) => {
+            const account = accountsMap.get(user.account_id);
+            return account ? { ...user, accounts: account } : null;
+          })
+          .filter(Boolean); // Remove null entries
       }
     }
 
@@ -329,7 +338,7 @@ async function sendWhatsAppReminder({
     const formattedPhone = formatPhoneNumber(phoneNumber);
 
     // Create Arabic message
-    const message = createArabicMessage(expiresInDays, {
+    const message = createArabicMessage({
       userName,
       accountName,
       serviceName,
@@ -338,9 +347,8 @@ async function sendWhatsAppReminder({
     });
 
     // Send via GREEN-API (using correct URL format)
-    const subdomain = instanceId.substring(0, 4);
     const response = await fetch(
-      `https://${subdomain}.api.greenapi.com/waInstance${instanceId}/sendMessage/${accessToken}`,
+      `https://api.greenapi.com/waInstance${instanceId}/sendMessage/${accessToken}`,
       {
         method: "POST",
         headers: {

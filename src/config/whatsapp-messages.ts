@@ -18,16 +18,13 @@ export const ARABIC_MESSAGES = {
 /**
  * Build Arabic message from template
  */
-export function createArabicMessage(
-  daysAhead: number,
-  variables: {
-    userName: string;
-    accountName: string;
-    serviceName: string;
-    expirationDate: string;
-    expiresInDays: number;
-  }
-): string {
+export function createArabicMessage(variables: {
+  userName: string;
+  accountName: string;
+  serviceName: string;
+  expirationDate: string;
+  expiresInDays: number;
+}): string {
   // Use the default template (simplified)
   const template = ARABIC_MESSAGES.default;
 

@@ -36,13 +36,25 @@ export async function getExpiringAccounts(daysAhead: number = 7): Promise<{
   try {
     const supabase = createServiceClient();
 
-    // Calculate target date range
+    // Calculate target date range (using local date format to avoid timezone issues)
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + daysAhead);
 
-    const startDateString = startDate.toISOString().split("T")[0];
-    const endDateString = endDate.toISOString().split("T")[0];
+    // Format dates as YYYY-MM-DD in local timezone (not UTC)
+    const startDateString =
+      startDate.getFullYear() +
+      "-" +
+      String(startDate.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(startDate.getDate()).padStart(2, "0");
+
+    const endDateString =
+      endDate.getFullYear() +
+      "-" +
+      String(endDate.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(endDate.getDate()).padStart(2, "0");
 
     console.log(
       `Fetching accounts expiring between ${startDateString} and ${endDateString}`
@@ -80,24 +92,41 @@ export async function getExpiringAccounts(daysAhead: number = 7): Promise<{
       return { success: false, error: usersError.message };
     }
 
-    // Get account details for shared users
+    // Get account details for shared users (fix N+1 query problem)
     let sharedUsers: any[] = [];
     if (usersExpiring && usersExpiring.length > 0) {
-      for (const user of usersExpiring) {
-        const { data: account } = await supabase
-          .from("accounts")
-          .select(
-            `
-            id, name, email, account_type, service_id,
-            services (id, name)
-          `
-          )
-          .eq("id", user.account_id)
-          .single();
+      // Collect all account IDs
+      const accountIds = usersExpiring.map((user) => user.account_id);
 
-        if (account) {
-          sharedUsers.push({ ...user, accounts: account });
-        }
+      // Single query to fetch all accounts
+      const { data: accounts, error: accountsError } = await supabase
+        .from("accounts")
+        .select(
+          `
+          id, name, email, account_type, service_id,
+          services (id, name)
+        `
+        )
+        .in("id", accountIds);
+
+      if (accountsError) {
+        console.error(
+          "Error fetching accounts for shared users:",
+          accountsError
+        );
+      } else if (accounts) {
+        // Create a map for O(1) lookup
+        const accountsMap = new Map(
+          accounts.map((account) => [account.id, account])
+        );
+
+        // Map users to their accounts
+        sharedUsers = usersExpiring
+          .map((user) => {
+            const account = accountsMap.get(user.account_id);
+            return account ? { ...user, accounts: account } : null;
+          })
+          .filter(Boolean); // Remove null entries
       }
     }
 
@@ -199,24 +228,41 @@ export async function getAccountsWithPhones(): Promise<{
       return { success: false, error: usersError.message };
     }
 
-    // Get account details for shared users
+    // Get account details for shared users (fix N+1 query problem)
     let sharedUsers: any[] = [];
     if (usersWithPhones && usersWithPhones.length > 0) {
-      for (const user of usersWithPhones) {
-        const { data: account } = await supabase
-          .from("accounts")
-          .select(
-            `
-            id, name, email, account_type, service_id,
-            services (id, name)
-          `
-          )
-          .eq("id", user.account_id)
-          .single();
+      // Collect all account IDs
+      const accountIds = usersWithPhones.map((user) => user.account_id);
 
-        if (account) {
-          sharedUsers.push({ ...user, accounts: account });
-        }
+      // Single query to fetch all accounts
+      const { data: accounts, error: accountsError } = await supabase
+        .from("accounts")
+        .select(
+          `
+          id, name, email, account_type, service_id,
+          services (id, name)
+        `
+        )
+        .in("id", accountIds);
+
+      if (accountsError) {
+        console.error(
+          "Error fetching accounts for shared users:",
+          accountsError
+        );
+      } else if (accounts) {
+        // Create a map for O(1) lookup
+        const accountsMap = new Map(
+          accounts.map((account) => [account.id, account])
+        );
+
+        // Map users to their accounts
+        sharedUsers = usersWithPhones
+          .map((user) => {
+            const account = accountsMap.get(user.account_id);
+            return account ? { ...user, accounts: account } : null;
+          })
+          .filter(Boolean); // Remove null entries
       }
     }
 
@@ -280,27 +326,49 @@ export async function validateGreenApiConnection(): Promise<{
       };
     }
 
-    // Extract first 4 digits for the subdomain (based on GREEN-API URL format)
-    const subdomain = instanceId.substring(0, 4);
-    const stateUrl = `https://${subdomain}.api.greenapi.com/waInstance${instanceId}/getStateInstance/${accessToken}`;
+    // Use correct GREEN-API URL format (no subdomain)
+    const stateUrl = `https://api.greenapi.com/waInstance${instanceId}/getStateInstance/${accessToken}`;
 
-    const response = await fetch(stateUrl, { method: "GET" });
+    // Add timeout and proper headers
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-    if (!response.ok) {
+    try {
+      const response = await fetch(stateUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `State check failed: ${response.status}`,
+        };
+      }
+
+      const stateData = await response.json();
+      const isAuthorized = stateData.stateInstance === "authorized";
+
       return {
-        success: false,
-        error: `State check failed: ${response.status}`,
+        success: true,
+        state: stateData.stateInstance,
+        isAuthorized,
       };
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === "AbortError") {
+        return {
+          success: false,
+          error: "Request timeout - GREEN-API took too long to respond",
+        };
+      }
+      throw fetchError;
     }
-
-    const stateData = await response.json();
-    const isAuthorized = stateData.stateInstance === "authorized";
-
-    return {
-      success: true,
-      state: stateData.stateInstance,
-      isAuthorized,
-    };
   } catch (error) {
     console.error("Error validating GREEN-API connection:", error);
     return {
