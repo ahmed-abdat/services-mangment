@@ -24,6 +24,33 @@ export interface ExpiringAccountsResult {
   accounts: NotificationAccount[];
 }
 
+// New interfaces for type safety
+interface User {
+  id: string;
+  full_name: string | null;
+  email: string;
+  phone_number: string | null;
+  account_id: string;
+  starting_date: string;
+  ending_date: string;
+}
+
+interface Account {
+  id: string;
+  name: string;
+  email: string;
+  account_type: string;
+  service_id: string;
+  services: {
+    id: string;
+    name: string;
+  };
+}
+
+interface SharedUserWithAccount extends User {
+  accounts: Account;
+}
+
 /**
  * Get accounts expiring within specified days
  * This server action handles all the database queries for expiring accounts
@@ -93,7 +120,7 @@ export async function getExpiringAccounts(daysAhead: number = 7): Promise<{
     }
 
     // Get account details for shared users (fix N+1 query problem)
-    let sharedUsers: any[] = [];
+    let sharedUsers: SharedUserWithAccount[] = [];
     if (usersExpiring && usersExpiring.length > 0) {
       // Collect all account IDs
       const accountIds = usersExpiring.map((user) => user.account_id);
@@ -124,9 +151,11 @@ export async function getExpiringAccounts(daysAhead: number = 7): Promise<{
         sharedUsers = usersExpiring
           .map((user) => {
             const account = accountsMap.get(user.account_id);
-            return account ? { ...user, accounts: account } : null;
+            return account
+              ? ({ ...user, accounts: account } as SharedUserWithAccount)
+              : null;
           })
-          .filter(Boolean); // Remove null entries
+          .filter((user): user is SharedUserWithAccount => user !== null); // Remove null entries with type guard
       }
     }
 
@@ -229,7 +258,7 @@ export async function getAccountsWithPhones(): Promise<{
     }
 
     // Get account details for shared users (fix N+1 query problem)
-    let sharedUsers: any[] = [];
+    let sharedUsers: SharedUserWithAccount[] = [];
     if (usersWithPhones && usersWithPhones.length > 0) {
       // Collect all account IDs
       const accountIds = usersWithPhones.map((user) => user.account_id);
@@ -260,9 +289,11 @@ export async function getAccountsWithPhones(): Promise<{
         sharedUsers = usersWithPhones
           .map((user) => {
             const account = accountsMap.get(user.account_id);
-            return account ? { ...user, accounts: account } : null;
+            return account
+              ? ({ ...user, accounts: account } as SharedUserWithAccount)
+              : null;
           })
-          .filter(Boolean); // Remove null entries
+          .filter((user): user is SharedUserWithAccount => user !== null); // Remove null entries with type guard
       }
     }
 
