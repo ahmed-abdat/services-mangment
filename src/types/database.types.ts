@@ -156,6 +156,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_expired_accounts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          account_id: string
+          account_name: string
+          service_name: string
+          expires_at: string
+          account_type: string
+          user_count: number
+          days_expired: number
+        }[]
+      }
       get_service_subscription_stats: {
         Args: { service_id: string }
         Returns: {
