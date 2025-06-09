@@ -4,8 +4,8 @@ export * from "./components";
 // Export actions (when available)
 // export * from './actions';
 
-// Export validations (when available)
-// export * from './validations';
+// Export validations
+export * from "./validations/dashboard";
 
-// Export types (when available)
-// export * from './types';
+// Export types
+export * from "./types/dashboard";

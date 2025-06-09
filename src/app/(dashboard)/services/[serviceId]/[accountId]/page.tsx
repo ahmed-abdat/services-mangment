@@ -1,5 +1,6 @@
 import { getAccountUsers } from "@/app/action";
 import { getServiceAccount } from "@/features/dashboard/actions/service-accounts";
+import { getService } from "@/features/dashboard/actions/services";
 import NoServicesFound from "@/features/dashboard/components/NoServicesFound";
 import UsersHeader from "@/features/dashboard/components/users/UsersHeader";
 import UsersTabel from "@/features/dashboard/components/users/UserTabel";
@@ -10,6 +11,11 @@ import { Suspense } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Phone, Calendar } from "lucide-react";
+
+import {
+  PageBreadcrumb,
+  BreadcrumbItem,
+} from "@/components/ui/page-breadcrumb";
 
 interface PageProps {
   params: {
@@ -114,7 +120,14 @@ export default async function ServiceAccountPage({
   const { serviceId, accountId } = params;
 
   try {
-    // Fetch account details first
+    // Fetch service details first for breadcrumbs
+    const serviceResponse = await getService(serviceId);
+    const serviceName =
+      serviceResponse.success && serviceResponse.service
+        ? serviceResponse.service.name
+        : "Unknown Service";
+
+    // Fetch account details
     const accountResponse = await getServiceAccount(serviceId, accountId);
 
     if (!accountResponse.success || !accountResponse.account) {
@@ -123,10 +136,30 @@ export default async function ServiceAccountPage({
 
     const account = accountResponse.account;
 
+    // Build breadcrumbs
+    const breadcrumbItems: BreadcrumbItem[] = [
+      { label: "Services", href: "/services" },
+      { label: serviceName, href: `/services/${serviceId}` },
+      { label: account.name, isCurrentPage: true },
+    ];
+
     // Handle personal accounts (show user info directly from account)
     if (account.account_type === "personal") {
       return (
-        <section className="space-y-6">
+        <div className="space-y-8">
+          {/* Breadcrumbs */}
+          <PageBreadcrumb items={breadcrumbItems} />
+
+          {/* Header */}
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {account.name} Account
+            </h1>
+            <p className="text-muted-foreground">
+              View your personal account information.
+            </p>
+          </div>
+
           <Suspense fallback={<div>Loading header...</div>}>
             <UsersHeader
               serviceId={serviceId}
@@ -137,7 +170,7 @@ export default async function ServiceAccountPage({
           </Suspense>
 
           <PersonalAccountInfo account={account} />
-        </section>
+        </div>
       );
     }
 
@@ -145,7 +178,12 @@ export default async function ServiceAccountPage({
     const usersResponse = await getAccountUsers(serviceId, accountId);
 
     if (!usersResponse.success || !usersResponse.users) {
-      return <ErrorDisplay message="Error loading users" />;
+      return (
+        <div className="space-y-8">
+          <PageBreadcrumb items={breadcrumbItems} />
+          <ErrorDisplay message="Error loading users" />
+        </div>
+      );
     }
 
     // Format users data for client components and ensure no null values
@@ -154,7 +192,20 @@ export default async function ServiceAccountPage({
     );
 
     return (
-      <section className="space-y-6">
+      <div className="space-y-8">
+        {/* Breadcrumbs */}
+        <PageBreadcrumb items={breadcrumbItems} />
+
+        {/* Header */}
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {account.name} Account
+          </h1>
+          <p className="text-muted-foreground">
+            Manage users for this shared account.
+          </p>
+        </div>
+
         <Suspense fallback={<div>Loading header...</div>}>
           <UsersHeader
             serviceId={serviceId}
@@ -171,7 +222,7 @@ export default async function ServiceAccountPage({
             <UsersTabel users={formattedUsers} params={params} />
           )}
         </Suspense>
-      </section>
+      </div>
     );
   } catch (error) {
     console.error("Error in ServiceAccountPage:", error);

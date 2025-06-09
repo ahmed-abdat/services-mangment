@@ -6,6 +6,9 @@ export { default as ServiceCard } from "./ServiceCard";
 export { default as ServiceHeader } from "./ServiceHeader";
 export { default as ServiceThumbnail } from "./ServiceThumbnail";
 
+// Dashboard Stats Components
+export * from "./dashboard-stats";
+
 // Services Components
 export * from "./services/UploadServiceForm";
 

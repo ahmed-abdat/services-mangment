@@ -27,10 +27,10 @@ export default function DashboardLinks() {
 
         // Skip fetching account for known route segments that aren't account IDs
         const isRouteSegment = [
-          "upload-accounts",
-          "create",
-          "edit",
-          "upload-user",
+          "add-account",
+          "new-service",
+          "edit-service",
+          "add-user",
         ].includes(accountId);
 
         const serviceResult = await getService(serviceId);
@@ -58,10 +58,10 @@ export default function DashboardLinks() {
 
     // Better display names for common routes
     const routeDisplayNames: Record<string, string> = {
-      create: "Create Service",
-      edit: "Edit Service",
-      "upload-accounts": "Upload Accounts",
-      "upload-user": "Upload User",
+      "new-service": "Create Service",
+      "edit-service": "Edit Service",
+      "add-account": "Add Account",
+      "add-user": "Add User",
     };
 
     return (

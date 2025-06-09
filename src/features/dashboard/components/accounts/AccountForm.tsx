@@ -183,7 +183,7 @@ export default function AccountForm({
             router.push(`/services/${serviceId}`);
           } else {
             // Shared accounts go to upload users page
-            router.push(`/services/${serviceId}/${newAccountId}/upload-user`);
+            router.push(`/services/${serviceId}/${newAccountId}/add-user`);
           }
         } else {
           toast.error("Error while creating new account");

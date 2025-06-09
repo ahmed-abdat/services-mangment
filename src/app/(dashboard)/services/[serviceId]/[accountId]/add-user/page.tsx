@@ -3,21 +3,25 @@ import { getServiceAccount } from "@/features/dashboard/actions/service-accounts
 import { getAccountUser } from "@/features/dashboard/actions/service-users";
 import UserForm from "@/features/dashboard/components/users/UserForm";
 import { TUserTable } from "@/types/services/user";
+import {
+  PageBreadcrumb,
+  BreadcrumbItem,
+} from "@/components/ui/page-breadcrumb";
 
 /**
- * Upload User Page
+ * Add/Edit User Page
  * Server component that fetches required data and renders the UserForm component
  */
 
-interface UploadUserPageProps {
+interface AddUserPageProps {
   params: { serviceId: string; accountId: string };
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function UploadUserPage({
+export default async function AddUserPage({
   params,
   searchParams,
-}: UploadUserPageProps) {
+}: AddUserPageProps) {
   const { serviceId, accountId } = params;
   const userId = searchParams?.userId as string;
 
@@ -31,6 +35,14 @@ export default async function UploadUserPage({
     accountId
   );
   const accountName = accountSuccess && account ? account.name : "";
+
+  // Build breadcrumbs
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: "Services", href: "/services" },
+    { label: serviceName, href: `/services/${serviceId}` },
+    { label: accountName, href: `/services/${serviceId}/${accountId}` },
+    { label: userId ? "Edit User" : "Add User", isCurrentPage: true },
+  ];
 
   // Fetch user data if editing (server-side)
   // Let Supabase handle UUID validation naturally
@@ -53,13 +65,30 @@ export default async function UploadUserPage({
   }
 
   return (
-    <UserForm
-      serviceId={serviceId}
-      accountId={accountId}
-      userId={userId}
-      serviceName={serviceName}
-      accountName={accountName}
-      initialData={userData}
-    />
+    <div className="space-y-8">
+      {/* Breadcrumbs */}
+      <PageBreadcrumb items={breadcrumbItems} sticky />
+
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">
+          {userId ? "Edit User" : "Add New User"}
+        </h1>
+        <p className="text-muted-foreground">
+          {userId
+            ? "Update user information and settings."
+            : `Add a new user to ${accountName} account.`}
+        </p>
+      </div>
+
+      <UserForm
+        serviceId={serviceId}
+        accountId={accountId}
+        userId={userId}
+        serviceName={serviceName}
+        accountName={accountName}
+        initialData={userData}
+      />
+    </div>
   );
 }
