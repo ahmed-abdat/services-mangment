@@ -12,10 +12,10 @@ export default function NoServicesFound({
 }) {
   const uploadservesurl =
     serviceId && accountId
-      ? `/services/${serviceId}/${accountId}/upload-user`
+      ? `/services/${serviceId}/${accountId}/add-user`
       : serviceId
-      ? `/services/${serviceId}/upload-accounts`
-      : "/services/create";
+        ? `/services/${serviceId}/add-account`
+        : "/services/new-service";
   return (
     <>
       <div className="mt-8">
@@ -35,8 +35,8 @@ export default function NoServicesFound({
             {serviceId && accountId
               ? "users"
               : serviceId
-              ? "accounts"
-              : "services"}{" "}
+                ? "accounts"
+                : "services"}{" "}
             yet.
           </p>
           <Link
@@ -47,8 +47,8 @@ export default function NoServicesFound({
             {serviceId && accountId
               ? "User"
               : serviceId
-              ? "Account"
-              : "Service"}
+                ? "Account"
+                : "Service"}
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

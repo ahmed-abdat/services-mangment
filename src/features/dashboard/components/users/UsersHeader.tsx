@@ -25,7 +25,7 @@ function UsersHeader({
   const [accountName, setAccountName] = React.useState<string>(
     initialAccountName || ""
   );
-  const uploadservesurl = `/services/${serviceId}/${accountId}/upload-user`;
+  const uploadservesurl = `/services/${serviceId}/${accountId}/add-user`;
 
   // Memoize the fetch function to prevent unnecessary recreations
   const fetchAccountName = useCallback(async () => {

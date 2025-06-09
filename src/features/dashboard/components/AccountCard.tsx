@@ -91,7 +91,7 @@ export default function AccountCard({
   }, [account, serviceId]);
 
   // Create update URL
-  const updateUrl = `/services/${serviceId}/upload-accounts?accountId=${account.id}`;
+  const updateUrl = `/services/${serviceId}/add-account?accountId=${account.id}`;
   const expirationStatus = getExpirationStatus(account.expires_at);
 
   if (!account || !serviceId) {
@@ -151,23 +151,23 @@ export default function AccountCard({
                 expirationStatus.status === "expired"
                   ? "destructive"
                   : expirationStatus.status === "expiring"
-                  ? "destructive"
-                  : "default"
+                    ? "destructive"
+                    : "default"
               }
               className={
                 expirationStatus.status === "expired"
                   ? "bg-red-500/90 text-white backdrop-blur-sm"
                   : expirationStatus.status === "expiring"
-                  ? "bg-orange-500/90 text-white backdrop-blur-sm"
-                  : "bg-green-500/90 text-white backdrop-blur-sm"
+                    ? "bg-orange-500/90 text-white backdrop-blur-sm"
+                    : "bg-green-500/90 text-white backdrop-blur-sm"
               }
             >
               <Clock className="w-3 h-3 mr-1" />
               {expirationStatus.status === "expired"
                 ? `Expired ${expirationStatus.days}d ago`
                 : expirationStatus.status === "expiring"
-                ? `${expirationStatus.days}d left`
-                : `${expirationStatus.days}d left`}
+                  ? `${expirationStatus.days}d left`
+                  : `${expirationStatus.days}d left`}
             </Badge>
           )}
         </div>

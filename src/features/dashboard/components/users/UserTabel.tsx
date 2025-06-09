@@ -267,7 +267,7 @@ function UsersTable({ users, params }: UsersTableProps) {
                 <DropdownMenuItem
                   onClick={() =>
                     router.push(
-                      `/services/${params.serviceId}/${params.accountId}/upload-user?userId=${user.id}`
+                      `/services/${params.serviceId}/${params.accountId}/add-user?userId=${user.id}`
                     )
                   }
                 >
