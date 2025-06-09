@@ -61,17 +61,18 @@ export async function getDashboardStats(): Promise<{
       return { success: false, error: accountsError.message };
     }
 
-    // Get users statistics
+    // Get users statistics - filter out null ending_date
     const { data: usersData, error: usersError } = await supabase
       .from("users")
-      .select("ending_date");
+      .select("ending_date")
+      .not("ending_date", "is", null);
 
     if (usersError) {
       console.error("Error fetching users data:", usersError);
       return { success: false, error: usersError.message };
     }
 
-    // Get personal accounts statistics
+    // Get personal accounts statistics - filter out null ending_date
     const { data: personalAccounts, error: personalError } = await supabase
       .from("accounts")
       .select("account_ending_date, account_type")
@@ -98,7 +99,12 @@ export async function getDashboardStats(): Promise<{
       totalUsers += usersData.length;
 
       usersData.forEach((user) => {
+        // Safe date parsing with validation
         const endingDate = new Date(user.ending_date);
+        if (isNaN(endingDate.getTime())) {
+          console.warn(`Invalid ending_date for user: ${user.ending_date}`);
+          return; // Skip invalid dates
+        }
 
         if (endingDate < today) {
           expiredUsers++;
@@ -117,7 +123,14 @@ export async function getDashboardStats(): Promise<{
       totalUsers += personalAccounts.length;
 
       personalAccounts.forEach((account) => {
+        // Safe date parsing with validation
         const endingDate = new Date(account.account_ending_date!);
+        if (isNaN(endingDate.getTime())) {
+          console.warn(
+            `Invalid account_ending_date for account: ${account.account_ending_date}`
+          );
+          return; // Skip invalid dates
+        }
 
         if (endingDate < today) {
           expiredUsers++;
@@ -131,8 +144,12 @@ export async function getDashboardStats(): Promise<{
       });
     }
 
-    // Get recent activity
+    // Get recent activity with proper error handling
     const recentActivity = await getRecentActivity();
+    if (!recentActivity.success) {
+      console.warn("Failed to fetch recent activity:", recentActivity.error);
+      // Continue with empty activity rather than failing entirely
+    }
 
     const stats: DashboardStats = {
       totalServices: servicesCount || 0,
@@ -183,7 +200,7 @@ export async function getRecentActivity(): Promise<{
           id: `service-${service.id}`,
           type: "service_created",
           message: `Service '${service.name}' created`,
-          time: new Date(service.created_at).toLocaleDateString(),
+          time: service.created_at, // Store as ISO string
           status: "success",
           metadata: { serviceName: service.name },
         });
@@ -211,7 +228,7 @@ export async function getRecentActivity(): Promise<{
           id: `account-${account.id}`,
           type: "account_added",
           message: `Account '${account.name}' added to ${(account.services as any)?.name || "service"}`,
-          time: new Date(account.created_at!).toLocaleDateString(),
+          time: account.created_at!, // Store as ISO string
           status: "info",
           metadata: {
             accountName: account.name,
@@ -242,7 +259,7 @@ export async function getRecentActivity(): Promise<{
           id: `user-${user.id}`,
           type: "user_added",
           message: `User '${user.full_name}' added to ${(user.accounts as any)?.name || "account"}`,
-          time: new Date(user.created_at!).toLocaleDateString(),
+          time: user.created_at!, // Store as ISO string
           status: "success",
           metadata: {
             userName: user.full_name,
@@ -277,17 +294,17 @@ export async function getRecentActivity(): Promise<{
         id: "expiring-soon",
         type: "subscription_expiring",
         message: `${expiringSoon.length} subscription${expiringSoon.length > 1 ? "s" : ""} expiring soon`,
-        time: "Today",
+        time: new Date().toISOString(), // Current time as ISO string
         status: "warning",
         metadata: {},
       });
     }
 
-    // Sort activities by most recent first
+    // Sort activities by most recent first using ISO date strings
     activities.sort((a, b) => {
-      if (a.time === "Today") return -1;
-      if (b.time === "Today") return 1;
-      return new Date(b.time).getTime() - new Date(a.time).getTime();
+      const dateA = new Date(a.time);
+      const dateB = new Date(b.time);
+      return dateB.getTime() - dateA.getTime();
     });
 
     return { success: true, data: activities.slice(0, 10) }; // Limit to 10 items

@@ -97,33 +97,33 @@ export default async function DashboardPage() {
             <CardDescription>Common tasks and shortcuts</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link href="/services/new-service">
-              <Button className="w-full justify-start" variant="outline">
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <Link href="/services/new-service">
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Service
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
-            <Link href="/services">
-              <Button className="w-full justify-start" variant="outline">
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <Link href="/services">
                 <Settings className="h-4 w-4 mr-2" />
                 Manage Services
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
-            <Link href="/services">
-              <Button className="w-full justify-start" variant="outline">
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <Link href="/services">
                 <Users className="h-4 w-4 mr-2" />
                 Manage Users
-              </Button>
-            </Link>
+              </Link>
+            </Button>
 
-            <Link href="/settings">
-              <Button className="w-full justify-start" variant="outline">
+            <Button className="w-full justify-start" variant="outline" asChild>
+              <Link href="/settings">
                 <FileText className="h-4 w-4 mr-2" />
                 Account Settings
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -256,12 +256,12 @@ export default async function DashboardPage() {
               <p className="text-muted-foreground mb-4">
                 No services found. Create your first service to get started.
               </p>
-              <Link href="/services/new-service">
-                <Button>
+              <Button asChild>
+                <Link href="/services/new-service">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Service
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </CardContent>
         </Card>

@@ -276,7 +276,7 @@ export function RecentActivity() {
                 <div className="flex-1">
                   <p className="text-sm font-medium">{activity.message}</p>
                   <p className="text-xs text-muted-foreground">
-                    {activity.time}
+                    {new Date(activity.time).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="ml-4">{getStatusBadge(activity.status)}</div>

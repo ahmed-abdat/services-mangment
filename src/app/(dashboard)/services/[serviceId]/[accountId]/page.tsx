@@ -1,14 +1,13 @@
-import { getAccountUsers } from "@/app/action";
+import { getAccountUsers } from "@/features/dashboard/actions/service-users";
 import { getServiceAccount } from "@/features/dashboard/actions/service-accounts";
 import { getService } from "@/features/dashboard/actions/services";
 import NoServicesFound from "@/features/dashboard/components/NoServicesFound";
 import UsersHeader from "@/features/dashboard/components/users/UsersHeader";
-import UsersTabel from "@/features/dashboard/components/users/UserTabel";
+import UsersTable from "@/features/dashboard/components/users/UsersTable";
 import { formatUserForClient } from "@/lib/utils/format";
 import { TUserTable } from "@/types/services/user";
 import { ServiceAccount } from "@/types/services/service-accounts";
 import { Suspense } from "react";
-import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Phone, Calendar } from "lucide-react";
 
@@ -219,14 +218,13 @@ export default async function ServiceAccountPage({
           {formattedUsers.length === 0 ? (
             <NoServicesFound serviceId={serviceId} accountId={accountId} />
           ) : (
-            <UsersTabel users={formattedUsers} params={params} />
+            <UsersTable users={formattedUsers} params={params} />
           )}
         </Suspense>
       </div>
     );
   } catch (error) {
     console.error("Error in ServiceAccountPage:", error);
-    toast.error("An error occurred while loading the page");
     return <ErrorDisplay message="An unexpected error occurred" />;
   }
 }
