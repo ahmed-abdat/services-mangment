@@ -153,11 +153,6 @@ export default function UserForm({
 
   return (
     <section className="mx-auto sm:flex mt-8 sm:flex-col md:px-8">
-      <h1 className="text-2xl tracking-tight text-center">
-        {userId ? "Update" : "Create new"} user for{" "}
-        <span className="font-semibold">{accountName}</span> in{" "}
-        <span className="font-semibold">{serviceName}</span> service
-      </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField

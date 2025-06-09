@@ -15,20 +15,21 @@ import {
  */
 
 interface UploadAccountsPageProps {
-  params: { serviceId: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ serviceId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function UploadAccountsPage({
   params,
   searchParams,
 }: UploadAccountsPageProps) {
-  const accountId = searchParams?.accountId as string;
+  // Await params and searchParams according to Next.js 15 async request APIs
+  const { serviceId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const accountId = resolvedSearchParams?.accountId as string;
 
   // Fetch service and handle not found case explicitly
-  const { service, success: serviceSuccess } = await getService(
-    params.serviceId
-  );
+  const { service, success: serviceSuccess } = await getService(serviceId);
 
   // If service is not found, redirect to 404 page
   if (!serviceSuccess || !service) {
@@ -45,7 +46,7 @@ export default async function UploadAccountsPage({
   if (accountId && typeof accountId === "string") {
     try {
       const { account, success: accountSuccess } = await getServiceAccount(
-        params.serviceId,
+        serviceId,
         accountId
       );
       if (accountSuccess && account) {
@@ -65,7 +66,7 @@ export default async function UploadAccountsPage({
   // Build breadcrumbs
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: "Services", href: "/services" },
-    { label: serviceName, href: `/services/${params.serviceId}` },
+    { label: serviceName, href: `/services/${serviceId}` },
     {
       label: accountId ? "Edit Account" : "Add Account",
       isCurrentPage: true,
@@ -90,7 +91,7 @@ export default async function UploadAccountsPage({
       </div>
 
       <AccountForm
-        serviceId={params.serviceId}
+        serviceId={serviceId}
         serviceName={serviceName}
         accountId={accountId}
         initialData={accountData}

@@ -1,10 +1,11 @@
 import { VerifyEmailForm } from "@/features/auth/components/verify-email";
 
-export default function VerifyEmailPage({
+export default async function VerifyEmailPage({
   params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = params;
+  // Await params according to Next.js 15 async request APIs
+  const { locale } = await params;
   return <VerifyEmailForm locale={locale} />;
 }

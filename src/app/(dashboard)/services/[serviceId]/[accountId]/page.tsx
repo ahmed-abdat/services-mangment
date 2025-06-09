@@ -1,4 +1,4 @@
-import { getAccountUsers } from "@/app/action";
+import { getAccountUsers } from "@/features/dashboard/actions/service-users";
 import { getServiceAccount } from "@/features/dashboard/actions/service-accounts";
 import { getService } from "@/features/dashboard/actions/services";
 import NoServicesFound from "@/features/dashboard/components/NoServicesFound";
@@ -18,13 +18,13 @@ import {
 } from "@/components/ui/page-breadcrumb";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     serviceId: string;
     accountId: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     [key: string]: string | string[] | undefined;
-  };
+  }>;
 }
 
 // Loading component for the table
@@ -117,7 +117,9 @@ export default async function ServiceAccountPage({
   params,
   searchParams,
 }: PageProps) {
-  const { serviceId, accountId } = params;
+  // Await params and searchParams according to Next.js 15 async request APIs
+  const { serviceId, accountId } = await params;
+  const resolvedSearchParams = await searchParams;
 
   try {
     // Fetch service details first for breadcrumbs
@@ -219,7 +221,10 @@ export default async function ServiceAccountPage({
           {formattedUsers.length === 0 ? (
             <NoServicesFound serviceId={serviceId} accountId={accountId} />
           ) : (
-            <UsersTabel users={formattedUsers} params={params} />
+            <UsersTabel
+              users={formattedUsers}
+              params={{ serviceId, accountId }}
+            />
           )}
         </Suspense>
       </div>

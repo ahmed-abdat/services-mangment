@@ -14,16 +14,18 @@ import {
  */
 
 interface AddUserPageProps {
-  params: { serviceId: string; accountId: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ serviceId: string; accountId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function AddUserPage({
   params,
   searchParams,
 }: AddUserPageProps) {
-  const { serviceId, accountId } = params;
-  const userId = searchParams?.userId as string;
+  // Await params and searchParams according to Next.js 15 async request APIs
+  const { serviceId, accountId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const userId = resolvedSearchParams?.userId as string;
 
   // Fetch service name on the server
   const { service, success: serviceSuccess } = await getService(serviceId);
@@ -76,8 +78,8 @@ export default async function AddUserPage({
         </h1>
         <p className="text-muted-foreground">
           {userId
-            ? "Update user information and settings."
-            : `Add a new user to ${accountName} account.`}
+            ? "Update user information and subscription details."
+            : `Add a new user to ${accountName} account in ${serviceName} service.`}
         </p>
       </div>
 

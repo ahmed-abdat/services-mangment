@@ -5,12 +5,14 @@ import ServiceCard from "@/features/dashboard/components/ServiceCard";
 import CardGrid from "@/components/card-grid";
 
 interface ServicesPageProps {
-  searchParams: {
+  searchParams: Promise<{
     search?: string;
-  };
+  }>;
 }
 
 export default async function Services({ searchParams }: ServicesPageProps) {
+  // Await searchParams according to Next.js 15 async request APIs
+  const resolvedSearchParams = await searchParams;
   const { services, success } = await getServices();
 
   if (success === false) {
@@ -29,7 +31,7 @@ export default async function Services({ searchParams }: ServicesPageProps) {
   }
 
   // Filter services based on search parameter
-  const searchTerm = searchParams.search?.toLowerCase().trim();
+  const searchTerm = resolvedSearchParams.search?.toLowerCase().trim();
   const filteredServices = searchTerm
     ? services.filter((service) =>
         service.name.toLowerCase().includes(searchTerm)
@@ -47,7 +49,8 @@ export default async function Services({ searchParams }: ServicesPageProps) {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">No services found</h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              No services match your search for &quot;{searchParams.search}
+              No services match your search for &quot;
+              {resolvedSearchParams.search}
               &quot;. Try a different search term or create a new service.
             </p>
           </div>

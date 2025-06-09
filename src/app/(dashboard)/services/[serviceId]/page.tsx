@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/page-breadcrumb";
 
 interface PosteProps {
-  params: {
+  params: Promise<{
     serviceId: string;
-  };
+  }>;
 }
 
 export default async function ServiceName({ params }: PosteProps) {
-  const { serviceId } = params;
+  // Await params according to Next.js 15 async request APIs
+  const { serviceId } = await params;
 
   // Get service details first
   const serviceResult = await getService(serviceId);

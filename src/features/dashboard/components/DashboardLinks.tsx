@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { getService, getServiceAccount } from "@/app/action";
+import { getService } from "@/features/dashboard/actions/services";
+import { getServiceAccount } from "@/features/dashboard/actions/service-accounts";
 import {
   Breadcrumb,
   BreadcrumbItem,

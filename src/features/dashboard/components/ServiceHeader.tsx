@@ -107,7 +107,7 @@ export default function ServiceHeader({
       {/* Search and Filter Section */}
       {!serviceId && (
         <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 max-w-md w-full">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search services..."

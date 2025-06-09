@@ -8,8 +8,10 @@ export default async function AuthLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  // Await params according to Next.js 15 async request APIs
+  const { locale } = await params;
   const user = await getUser();
   console.log("from auth layout", user);
 

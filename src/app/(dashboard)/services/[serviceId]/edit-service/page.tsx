@@ -6,16 +6,19 @@ import {
 import { getService } from "@/features/dashboard/actions/services";
 
 interface EditServicePageProps {
-  params: {
+  params: Promise<{
     serviceId: string;
-  };
+  }>;
 }
 
 export default async function EditServicePage({
   params,
 }: EditServicePageProps) {
+  // Await params according to Next.js 15 async request APIs
+  const { serviceId } = await params;
+
   // Get service name for breadcrumbs
-  const serviceResult = await getService(params.serviceId);
+  const serviceResult = await getService(serviceId);
   const serviceName =
     serviceResult.success && serviceResult.service
       ? serviceResult.service.name
@@ -24,7 +27,7 @@ export default async function EditServicePage({
   // Build breadcrumbs
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: "Services", href: "/services" },
-    { label: serviceName, href: `/services/${params.serviceId}` },
+    { label: serviceName, href: `/services/${serviceId}` },
     { label: "Edit", isCurrentPage: true },
   ];
 
@@ -41,7 +44,7 @@ export default async function EditServicePage({
         </p>
       </div>
 
-      <EditServiceForm serviceId={params.serviceId} />
+      <EditServiceForm serviceId={serviceId} />
     </div>
   );
 }
