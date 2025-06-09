@@ -27,8 +27,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,12 +69,44 @@ const accountItems = [
   },
 ];
 
+// Custom Link component that auto-closes mobile sidebar
+function SidebarLink({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleClick = () => {
+    // Auto-close sidebar on mobile when link is clicked
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  return (
+    <Link href={href} className={className} onClick={handleClick}>
+      {children}
+    </Link>
+  );
+}
+
 // User profile component for sidebar footer
 function UserProfile({ user }: { user: Tables<"auth_users"> }) {
   const router = useRouter();
+  const { setOpenMobile, isMobile } = useSidebar();
 
   const handleSignOut = async () => {
     try {
+      // Auto-close sidebar on mobile before signing out
+      if (isMobile) {
+        setOpenMobile(false);
+      }
+
       // Sign out using Supabase Auth
       await signOut();
 
@@ -83,6 +116,13 @@ function UserProfile({ user }: { user: Tables<"auth_users"> }) {
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Error signing out");
+    }
+  };
+
+  const handleSettingsClick = () => {
+    // Auto-close sidebar on mobile when navigating to settings
+    if (isMobile) {
+      setOpenMobile(false);
     }
   };
 
@@ -104,7 +144,6 @@ function UserProfile({ user }: { user: Tables<"auth_users"> }) {
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
           <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src="/avatars/01.png" alt="User Avatar" />
             <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
@@ -122,7 +161,6 @@ function UserProfile({ user }: { user: Tables<"auth_users"> }) {
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="h-8 w-8 rounded-lg">
-              <AvatarImage src="/avatars/01.png" alt="User Avatar" />
               <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -133,7 +171,7 @@ function UserProfile({ user }: { user: Tables<"auth_users"> }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/settings">
+          <Link href="/settings" onClick={handleSettingsClick}>
             <Settings className="mr-2 h-4 w-4" />
             Account Settings
           </Link>
@@ -156,7 +194,7 @@ export function AppSidebar({ user }: { user: Tables<"auth_users"> }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
+              <SidebarLink href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Shield className="size-4" />
                 </div>
@@ -166,7 +204,7 @@ export function AppSidebar({ user }: { user: Tables<"auth_users"> }) {
                   </span>
                   <span className="truncate text-xs">Dashboard</span>
                 </div>
-              </Link>
+              </SidebarLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -183,12 +221,12 @@ export function AppSidebar({ user }: { user: Tables<"auth_users"> }) {
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <Link href={item.url}>
+                    <SidebarLink href={item.url}>
                       <item.icon />
                       <span className="group-data-[collapsible=icon]:hidden">
                         {item.title}
                       </span>
-                    </Link>
+                    </SidebarLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -206,12 +244,12 @@ export function AppSidebar({ user }: { user: Tables<"auth_users"> }) {
               {accountItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <Link href={item.url}>
+                    <SidebarLink href={item.url}>
                       <item.icon />
                       <span className="group-data-[collapsible=icon]:hidden">
                         {item.title}
                       </span>
-                    </Link>
+                    </SidebarLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

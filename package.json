@@ -1,13 +1,14 @@
 {
   "name": "rimcode-services-dashboard",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "RIMcode's service management dashboard for managing and monitoring services, accounts, and user subscriptions",
+  "description": "Enterprise-grade service management dashboard with real-time analytics, responsive design, and comprehensive subscription management",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
